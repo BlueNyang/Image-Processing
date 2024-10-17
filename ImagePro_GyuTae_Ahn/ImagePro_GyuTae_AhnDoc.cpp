@@ -36,6 +36,9 @@ CImageProGyuTaeAhnDoc::CImageProGyuTaeAhnDoc() noexcept
 	compare_img = NULL;
 	output_img = NULL;
 	imageHeight = 0, imageWidth = 0, depth = 0;
+
+	gImageWidth = 0, gImageHeight = 0;
+	gOutput_img = NULL;
 }
 
 CImageProGyuTaeAhnDoc::~CImageProGyuTaeAhnDoc()
@@ -411,11 +414,10 @@ void CImageProGyuTaeAhnDoc::PixelContrast() {
 	std::cout << " >[PixelContrast] Done" << std::endl;
 }
 
-void CImageProGyuTaeAhnDoc::PixelBinarization() {
+void CImageProGyuTaeAhnDoc::PixelBinarization(int threshold) {
 	std::cout << "[pDoc] PixelBinarization" << std::endl;
 	if (input_img == NULL) Load1Image();
 	std::cout << " >[PixelBinarization] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
-	int threshold = 230;
 	std::cout << " >[PixelBinarization] threshold: " << threshold << std::endl;
 
 	for (int y = 0; y < imageHeight; y++) {
@@ -954,7 +956,6 @@ void CImageProGyuTaeAhnDoc::RegionEmbossing() {
 }//PixelRegionEmbossing
 
 //Morphology
-
 void CImageProGyuTaeAhnDoc::CopyResultToInput() {
 	for (int y = 0; y < imageHeight; y++) {
 		for (int x = 0; x < imageWidth; x++) {
@@ -962,8 +963,37 @@ void CImageProGyuTaeAhnDoc::CopyResultToInput() {
 		}
 	}
 }
+void CImageProGyuTaeAhnDoc::Find_Connected_Region(int y, int x, int** label, int label_num) {
+	if(label[y][x] != 0) return;
 
-void CImageProGyuTaeAhnDoc::Erosion() {
+	label[y][x] = label_num;
+
+	if (y > 0 && x > 0 && output_img[y - 1][x - 1] == 255)
+		Find_Connected_Region(y - 1, x - 1, label, label_num);
+
+	if (y > 0 && output_img[y - 1][x] == 255)
+		Find_Connected_Region(y - 1, x, label, label_num);
+
+	if (y > 0 && x < imageWidth - 1 && output_img[y - 1][x + 1] == 255)
+		Find_Connected_Region(y - 1, x + 1, label, label_num);
+
+	if (x > 0 && output_img[y][x - 1] == 255)
+		Find_Connected_Region(y, x - 1, label, label_num);
+
+	if (x < imageWidth - 1 && output_img[y][x + 1] == 255)
+		Find_Connected_Region(y, x + 1, label, label_num);
+
+	if (y < imageHeight - 1 && x > 0 && output_img[y + 1][x - 1] == 255)
+		Find_Connected_Region(y + 1, x - 1, label, label_num);
+
+	if (y < imageHeight - 1 && output_img[y + 1][x] == 255)
+		Find_Connected_Region(y + 1, x, label, label_num);
+
+	if (y < imageHeight - 1 && x < imageWidth - 1 && output_img[y + 1][x + 1] == 255)
+		Find_Connected_Region(y + 1, x + 1, label, label_num);
+} //Find_Connected_Region
+
+void CImageProGyuTaeAhnDoc::Min_Value_Filter(unsigned char background) {
 	std::cout << "[pDoc] Erosion" << std::endl;
 	if (input_img == NULL) Load1Image();
 	std::cout << " >[Erosion] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
@@ -974,8 +1004,7 @@ void CImageProGyuTaeAhnDoc::Erosion() {
 	for (int y = 0; y < imageHeight; y++) {
 		for (int x = 0; x < imageWidth; x++) {
 			if (y == 0 || x == 0 || y == imageHeight - 1 || x == imageWidth - 1) {
-				output_img[y][x] = 0;
-				continue;
+				output_img[y][x] = background;
 			}
 			else {
 				min = 255;
@@ -995,18 +1024,18 @@ void CImageProGyuTaeAhnDoc::Erosion() {
 	std::cout << " >[Erosion] Done" << std::endl;
 }//Erosion
 
-void CImageProGyuTaeAhnDoc::Dilation() {
+void CImageProGyuTaeAhnDoc::Max_Value_Filter(unsigned char background) {
 	std::cout << "[pDoc] Dilation" << std::endl;
 	if (input_img == NULL) Load1Image();
 	std::cout << " >[Dilation] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
+	
 	int max;
 
 	std::cout << " >[Dilation] malloc output_img" << std::endl;
 	for (int y = 0; y < imageHeight; y++) {
 		for (int x = 0; x < imageWidth; x++) {
 			if (y == 0 || x == 0 || y == imageHeight - 1 || x == imageWidth - 1) {
-				output_img[y][x] = 0;
-				continue;
+				output_img[y][x] = background;
 			}
 			else {
 				max = 0;
@@ -1026,20 +1055,120 @@ void CImageProGyuTaeAhnDoc::Dilation() {
 	std::cout << " >[Dilation] Done" << std::endl;
 }//Dilation
 
-void CImageProGyuTaeAhnDoc::Opening() {
+void CImageProGyuTaeAhnDoc::Opening(unsigned char background) {
 	std::cout << "[pDoc] Opening" << std::endl;
 	if (input_img == NULL) Load1Image();
 	std::cout << " >[Opening] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
-	Erosion();
+	Min_Value_Filter(background);
 	CopyResultToInput();
-	Erosion();
+	Min_Value_Filter(background);
 	CopyResultToInput();
-	Erosion();
+	Min_Value_Filter(background);
 	CopyResultToInput();
-	Erosion();
+	Max_Value_Filter(background);
 	CopyResultToInput();
-	Erosion();
+	Max_Value_Filter(background);
 	CopyResultToInput();
-	Dilation();
+	Max_Value_Filter(background);
 }//Opening
+
+void CImageProGyuTaeAhnDoc::Closing(unsigned char background) {
+	std::cout << "[pDoc] Closing" << std::endl;
+	if (input_img == NULL) Load1Image();
+	std::cout << " >[Closing] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
+
+	Max_Value_Filter(background);
+	CopyResultToInput();
+	Max_Value_Filter(background);
+	CopyResultToInput();
+	Max_Value_Filter(background);
+	CopyResultToInput();
+	Min_Value_Filter(background);
+	CopyResultToInput();
+	Min_Value_Filter(background);
+	CopyResultToInput();
+	Min_Value_Filter(background);
+}//Closing
+
+void CImageProGyuTaeAhnDoc::CountCell() {
+	std::cout << "[pDoc] CountCell" << std::endl;
+	if (input_img == NULL) Load1Image();
+	std::cout << " >[CountCell] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
+
+	char buf[256];
+	int** label;
+	int label_no = 0;
+
+	std::cout << " >[CountCell] Pixel Binarization..." << std::endl;
+	PixelBinarization(100);
+	CopyResultToInput();
+
+	std::cout << " >[CountCell] Pixel Invert..." << std::endl;
+	PixelInvert();
+	CopyResultToInput();
+
+	std::cout << " >[CountCell] Opening..." << std::endl;
+	Opening(0);
+
+	std::cout << " >[CountCell] malloc label" << std::endl;
+	label = (int**)malloc(imageHeight * sizeof(int));
+	for (int y = 0; y < imageHeight; y++)
+		label[y] = (int*)malloc(imageWidth * sizeof(int));
+
+	std::cout << " >[CountCell] initialize label" << std::endl;
+	for (int y = 0; y < imageHeight; y++) {
+		for (int x = 0; x < imageWidth; x++) {
+			label[y][x] = 0;
+		}
+	}
+
+	std::cout << " >[CountCell] Counting..." << std::endl;
+	for (int y = 0; y < imageHeight; y++) {
+		for (int x = 0; x < imageWidth; x++) {
+			if (output_img[y][x] == 255 && label[y][x] == 0) {
+				label_no = label_no + 1;
+				Find_Connected_Region(y, x, label, label_no);
+			}
+		}
+	}
+
+	sprintf_s(buf, "Number of cells: %d", label_no);
+	std::cout << " >[CountCell] " << buf << std::endl;
+	AfxMessageBox(buf);
+	std::cout << " >[CountCell] Done" << std::endl;
+}//CountCell
+
+void CImageProGyuTaeAhnDoc::GeometryZoominPixelCopy() {
+	std::cout << "[pDoc] GeometryZoominPixelCopy" << std::endl;
+	if (input_img == NULL) Load1Image();
+	std::cout << " >[GeometryZoominPixelCopy] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
+
+	gImageWidth = imageWidth * 3;
+	gImageHeight = imageHeight * 3;
+
+	std::cout << " >[GeometryZoominPixelCopy] malloc gOutput_img" << std::endl;
+	gOutput_img = (unsigned char**)malloc(sizeof(unsigned char*) * gImageHeight);
+
+	for (int i = 0; i < gImageHeight; i++) {
+		gOutput_img[i] = (unsigned char*)malloc(gImageWidth * depth);
+	}
+	
+	std::cout << " >[GeometryZoominPixelCopy] Copying input_img to gOutput_img" << std::endl;
+	if (depth == 1) {
+		for (int y = 0; y < gImageHeight; y++)
+			for (int x = 0; x < gImageWidth; x++)
+				gOutput_img[y][x] = input_img[y / 3][x / 3];
+	}
+	else if (depth == 3) {
+		for (int y = 0; y < gImageHeight; y++) {
+			for (int x = 0; x < gImageWidth; x++){
+				gOutput_img[y][3 * x] = input_img[y / 3][3 * (x / 3)];
+				gOutput_img[y][3 * x + 1] = input_img[y / 3][3 * (x / 3) + 1];
+				gOutput_img[y][3 * x + 2] = input_img[y / 3][3 * (x / 3) + 2];
+			}
+
+		}
+	}
+	std::cout << " >[GeometryZoominPixelCopy] Done" << std::endl;
+}

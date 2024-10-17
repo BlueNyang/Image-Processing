@@ -63,12 +63,23 @@ public:
 	afx_msg void OnRegionBlurring();
 	afx_msg void OnRegionSobel();
 	afx_msg void OnMedianFilter();
-	afx_msg void OnErosion();
 	afx_msg void OnRegionRobert();
 	afx_msg void OnRegionPrewitt();
 	afx_msg void OnRegionEmbossing();
-	afx_msg void OnDilation();
-	afx_msg void OnOpening();
+	afx_msg void OnErosion(unsigned char background);
+	afx_msg void OnErosion0();
+	afx_msg void OnErosion255();
+	afx_msg void OnDilation(unsigned char background);
+	afx_msg void OnDilation0();
+	afx_msg void OnDilation255();
+	afx_msg void OnOpening(unsigned char background);
+	afx_msg void OnOpening0();
+	afx_msg void OnOpening255();
+	afx_msg void OnClosing(unsigned char background);
+	afx_msg void OnClosing0();
+	afx_msg void OnClosing255();
+	afx_msg void OnCountCell();
+	afx_msg void OnGeometryZoominPixelCopy();
 };
 
 #ifndef _DEBUG  // debug version in ImagePro_GyuTae_AhnView.cpp

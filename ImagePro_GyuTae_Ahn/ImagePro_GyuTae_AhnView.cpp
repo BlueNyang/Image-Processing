@@ -20,6 +20,7 @@
 
 #define TWO_IMAGES 1
 #define THREE_IMAGES 2
+#define TWO_IMAGES_SCALED 4
 
 // CImageProGyuTaeAhnView
 
@@ -47,12 +48,19 @@ BEGIN_MESSAGE_MAP(CImageProGyuTaeAhnView, CScrollView)
 	ON_COMMAND(ID_REGION_BLURRING, &CImageProGyuTaeAhnView::OnRegionBlurring)
 	ON_COMMAND(ID_REGION_SOBEL, &CImageProGyuTaeAhnView::OnRegionSobel)
 	ON_COMMAND(ID_MEDIAN_FILTER, &CImageProGyuTaeAhnView::OnMedianFilter)
-	ON_COMMAND(ID_EROSION, &CImageProGyuTaeAhnView::OnErosion)
 	ON_COMMAND(ID_REGION_ROBERT, &CImageProGyuTaeAhnView::OnRegionRobert)
 	ON_COMMAND(ID_REGION_PREWITT, &CImageProGyuTaeAhnView::OnRegionPrewitt)
 	ON_COMMAND(ID_REGION_EMBOSSING, &CImageProGyuTaeAhnView::OnRegionEmbossing)
-	ON_COMMAND(ID_DILATION, &CImageProGyuTaeAhnView::OnDilation)
-	ON_COMMAND(ID_OPENING, &CImageProGyuTaeAhnView::OnOpening)
+	ON_COMMAND(ID_EROSION_0, &CImageProGyuTaeAhnView::OnErosion0)
+	ON_COMMAND(ID_EROSION_255, &CImageProGyuTaeAhnView::OnErosion255)
+	ON_COMMAND(ID_DILATION_0, &CImageProGyuTaeAhnView::OnDilation0)
+	ON_COMMAND(ID_DILATION_255, &CImageProGyuTaeAhnView::OnDilation255)
+	ON_COMMAND(ID_OPENING_0, &CImageProGyuTaeAhnView::OnOpening0)
+	ON_COMMAND(ID_OPENING_255, &CImageProGyuTaeAhnView::OnOpening255)
+	ON_COMMAND(ID_CLOSING_0, &CImageProGyuTaeAhnView::OnClosing0)
+	ON_COMMAND(ID_CLOSING_255, &CImageProGyuTaeAhnView::OnClosing255)
+	ON_COMMAND(ID_COUNT_CELL, &CImageProGyuTaeAhnView::OnCountCell)
+	ON_COMMAND(ID_GEOMETRY_ZOOMIN_PIXEL_COPY, &CImageProGyuTaeAhnView::OnGeometryZoominPixelCopy)
 END_MESSAGE_MAP()
 
 // CImageProGyuTaeAhnView construction/destruction
@@ -106,6 +114,13 @@ void CImageProGyuTaeAhnView::OnDraw(CDC* pDC) {
 					pDC->SetPixel(x + pDoc->imageWidth * 2 + 60, y,
 						RGB(pDoc->output_img[y][x], pDoc->output_img[y][x], pDoc->output_img[y][x]));
 		}
+		else if (viewMode == TWO_IMAGES_SCALED) {
+			std::cout << " >[OnDraw] Depth 1 - Two Images Scaled" << std::endl;
+			for (int y = 0; y < pDoc->gImageHeight; y++)
+				for (int x = 0; x < pDoc->gImageWidth; x++)
+					pDC->SetPixel(x + pDoc->imageWidth + 30, y,
+						RGB(pDoc->gOutput_img[y][x], pDoc->gOutput_img[y][x], pDoc->gOutput_img[y][x]));
+		}
 		else {
 			std::cout << " >[OnDraw] Depth 1 - Two Images" << std::endl;
 			for (int y = 0; y < pDoc->imageHeight; y++)
@@ -132,6 +147,13 @@ void CImageProGyuTaeAhnView::OnDraw(CDC* pDC) {
 				for (int x = 0; x < pDoc->imageWidth; x++)
 					pDC->SetPixel(x + pDoc->imageWidth * 2 + 60, y,
 						RGB(pDoc->output_img[y][3 * x], pDoc->output_img[y][3 * x + 1], pDoc->output_img[y][3 * x + 2]));
+		}
+		else if (viewMode == TWO_IMAGES_SCALED) {
+			std::cout << " >[OnDraw] Depth 3 - Two Images Scaled" << std::endl;
+			for (int y = 0; y < pDoc->gImageHeight; y++)
+				for (int x = 0; x < pDoc->gImageWidth; x++)
+					pDC->SetPixel(x + pDoc->imageWidth + 30, y,
+						RGB(pDoc->gOutput_img[y][3 * x], pDoc->gOutput_img[y][3 * x + 1], pDoc->gOutput_img[y][3 * x + 2]));
 		}
 		else {
 			std::cout << " >[OnDraw] Depth 3 - Two Images" << std::endl;
@@ -323,7 +345,7 @@ void CImageProGyuTaeAhnView::OnPixelBinarization()
 	if (!pDoc)
 		return;
 
-	pDoc->PixelBinarization();
+	pDoc->PixelBinarization(230);
 
 	viewMode = TWO_IMAGES;
 	Invalidate(FALSE);
@@ -500,9 +522,7 @@ void CImageProGyuTaeAhnView::OnRegionEmbossing()
 
 }
 
-
-void CImageProGyuTaeAhnView::OnErosion()
-{
+void CImageProGyuTaeAhnView::OnErosion(unsigned char background) {
 	std::cout << "[pView] OnErosion" << std::endl;
 	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
@@ -510,13 +530,13 @@ void CImageProGyuTaeAhnView::OnErosion()
 	if (!pDoc)
 		return;
 
-	pDoc->Erosion();
+	pDoc ->Min_Value_Filter(background);
 
 	viewMode = TWO_IMAGES;
 	Invalidate(FALSE);
 }
 
-void CImageProGyuTaeAhnView::OnDilation()
+void CImageProGyuTaeAhnView::OnDilation(unsigned char background)
 {
 	std::cout << "[pView] OnDilation" << std::endl;
 	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
@@ -525,14 +545,15 @@ void CImageProGyuTaeAhnView::OnDilation()
 	if (!pDoc)
 		return;
 
-	pDoc->Dilation();
+	pDoc->Max_Value_Filter(background);
 
 	viewMode = TWO_IMAGES;
 	Invalidate(FALSE);
 }
 
 
-void CImageProGyuTaeAhnView::OnOpening()
+
+void CImageProGyuTaeAhnView::OnOpening(unsigned char background)
 {
 	std::cout << "[pView] OnOpening" << std::endl;
 	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
@@ -541,8 +562,84 @@ void CImageProGyuTaeAhnView::OnOpening()
 	if (!pDoc)
 		return;
 
-	pDoc->Opening();
+	pDoc->Opening(background);
 
 	viewMode = TWO_IMAGES;
+	Invalidate(FALSE);
+}
+
+void CImageProGyuTaeAhnView::OnClosing(unsigned char background) {
+		std::cout << "[pView] OnClosing" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc)
+		return;
+
+	pDoc->Closing(background);
+
+	viewMode = TWO_IMAGES;
+	Invalidate(FALSE);
+}
+
+void CImageProGyuTaeAhnView::OnCountCell() {
+	std::cout << "[pView] OnCountCell" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc)
+		return;
+
+	pDoc->CountCell();
+
+	viewMode = TWO_IMAGES;
+	Invalidate(FALSE);
+}
+
+void CImageProGyuTaeAhnView::OnErosion0()
+{
+	OnErosion(0);
+}
+void CImageProGyuTaeAhnView::OnDilation255()
+{
+	OnErosion(255);
+}
+void CImageProGyuTaeAhnView::OnDilation0()
+{
+	OnDilation(0);
+}
+void CImageProGyuTaeAhnView::OnErosion255()
+{
+	OnDilation(255);
+}
+void CImageProGyuTaeAhnView::OnOpening0()
+{
+	OnOpening(0);
+}
+void CImageProGyuTaeAhnView::OnClosing255() {
+	OnOpening(255);
+}
+void CImageProGyuTaeAhnView::OnClosing0()
+{
+	OnClosing(0);
+}
+void CImageProGyuTaeAhnView::OnOpening255()
+{
+	OnClosing(255);
+}
+
+//Geometry Pixel Processing
+void CImageProGyuTaeAhnView::OnGeometryZoominPixelCopy()
+{
+	std::cout << "[pView] OnGeometryZoominPixelCopy" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc)
+		return;
+
+	pDoc->GeometryZoominPixelCopy();
+
+	viewMode = TWO_IMAGES_SCALED;
 	Invalidate(FALSE);
 }

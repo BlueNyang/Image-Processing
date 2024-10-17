@@ -80,13 +80,27 @@
 #define ID_DILATION                     32818
 #define ID_OPEN                         32819
 #define ID_OPENING                      32820
+#define ID_CLOSING                      32821
+#define ID_COUNT_CELL                   32822
+#define ID_EROSION_EROSION              32823
+#define ID_EROSION_EROSION32824         32824
+#define ID_EROSION_255                  32825
+#define ID_EROSION_0                    32826
+#define ID_DILATION_0                   32827
+#define ID_DILATION_255                 32828
+#define ID_OPENING_0                    32829
+#define ID_OPENING_255                  32830
+#define ID_CLOSING_0                    32831
+#define ID_CLOSING_255                  32832
+#define ID_GEOMETRYPROCESSING_ZOOM      32833
+#define ID_GEOMETRY_ZOOMIN_PIXEL_COPY   32834
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        310
-#define _APS_NEXT_COMMAND_VALUE         32821
+#define _APS_NEXT_COMMAND_VALUE         32835
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

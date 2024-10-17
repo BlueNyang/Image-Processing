@@ -19,6 +19,9 @@ public:
 	unsigned char** output_img;
 	int imageWidth, imageHeight, depth;
 
+	int gImageWidth, gImageHeight;
+	unsigned char** gOutput_img;
+
 // Operations
 public:
 
@@ -65,7 +68,7 @@ public:
 	void PixelDiv();
 	void PixelHistoEQ();
 	void PixelContrast();
-	void PixelBinarization();
+	void PixelBinarization(int threshold);
 	void PixelInvert();
 	void PixelAdd2Images();
 	void PixelSub2Images();
@@ -83,8 +86,14 @@ public:
 
 	//Image Morphology
 	void CopyResultToInput();
-	void Erosion();
-	void Dilation();
-	void Opening();
+	void Find_Connected_Region(int y, int x, int** label, int label_num);
+	void Min_Value_Filter(unsigned char background);
+	void Max_Value_Filter(unsigned char background);
+	void Opening(unsigned char background);
+	void Closing(unsigned char background);
+	void CountCell();
+	
+	//Image Geometric Processing
+	void GeometryZoominPixelCopy();
 };
 	
