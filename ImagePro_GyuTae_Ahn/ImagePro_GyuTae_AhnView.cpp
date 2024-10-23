@@ -345,7 +345,7 @@ void CImageProGyuTaeAhnView::OnPixelBinarization()
 	if (!pDoc)
 		return;
 
-	pDoc->PixelBinarization(230);
+	pDoc->PixelBinarization(120);
 
 	viewMode = TWO_IMAGES;
 	Invalidate(FALSE);
@@ -569,7 +569,7 @@ void CImageProGyuTaeAhnView::OnOpening(unsigned char background)
 }
 
 void CImageProGyuTaeAhnView::OnClosing(unsigned char background) {
-		std::cout << "[pView] OnClosing" << std::endl;
+	std::cout << "[pView] OnClosing" << std::endl;
 	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
 

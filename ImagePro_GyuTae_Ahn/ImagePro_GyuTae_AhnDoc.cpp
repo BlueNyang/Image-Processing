@@ -151,14 +151,19 @@ void CImageProGyuTaeAhnDoc::Load1Image() {
 	std::cout << " >[Load1Image] Open AfxMessageBox - Select the image" << std::endl;
 	AfxMessageBox("Select the image");
 
-	if (dlg.DoModal() == IDOK) {
+	INT_PTR nResponse = dlg.DoModal();
+	if (nResponse == IDOK) {
 		std::cout << " >[Load1Image] Image selected" << std::endl;
 		file.Open(dlg.GetPathName(), CFile::modeRead);
 		CArchive ar(&file, CArchive::load);
 		LoadImageFile(ar);
 		file.Close();
 	}
-	std::cout << " >[Load1Image] Done" << std::endl;
+	else if (nResponse == IDCANCEL) {
+		std::cout << " >[Load1Image] Cancelled" << std::endl;
+		return;
+	}
+	if(depth != 0) std::cout << " >[Load1Image] Done" << std::endl;
 }
 
 void CImageProGyuTaeAhnDoc::Load2Images() {
@@ -168,31 +173,41 @@ void CImageProGyuTaeAhnDoc::Load2Images() {
 
 	std::cout << " >[Load2Images] Open AfxMessageBox - Select the first image" << std::endl;
 	AfxMessageBox("Select the first image");
-
-	if (dlg.DoModal() == IDOK) {
+	INT_PTR nResponse = dlg.DoModal();
+	if (nResponse == IDOK) {
 		std::cout << " >[Load2Images] First image selected" << std::endl;
 		file.Open(dlg.GetPathName(), CFile::modeRead);
 		CArchive ar(&file, CArchive::load);
 		LoadImageFile(ar);
 		file.Close();
 	}
+	else if (nResponse == IDCANCEL) {
+		std::cout << " >[Load2Images] Cancelled" << std::endl;
+		return;
+	}
 
 	std::cout << " >[Load2Images] Open AfxMessageBox - Select the second image" << std::endl;
 	AfxMessageBox("Select the second image");
 
-	if (dlg.DoModal() == IDOK) {
+	nResponse = dlg.DoModal();
+	if (nResponse == IDOK) {
 		std::cout << " >[Load2Images] Second image selected" << std::endl;
 		file.Open(dlg.GetPathName(), CFile::modeRead);
 		CArchive ar(&file, CArchive::load);
 		LoadSecondImageFile(ar);
 		file.Close();
 	}
-	std::cout << " >[Load2Images] Done" << std::endl;
+	else if (nResponse == IDCANCEL) {
+		std::cout << " >[Load2Images] Cancelled" << std::endl;
+		return;
+	}
+	if(depth != 0) std::cout << " >[Load2Images] Done" << std::endl;
+	else std::cout << " >[Load2Images] Failed" << std::endl;
 }
 
-void CImageProGyuTaeAhnDoc::LoadImageFile(CArchive& ar)
-{
+void CImageProGyuTaeAhnDoc::LoadImageFile(CArchive& ar) {
 	CheckLoadedImage(ar);
+	
 
 	std::cout << " >[LoadImageFile] malloc input_img, output_img" << std::endl;
 	input_img = (unsigned char**)malloc(sizeof(unsigned char*) * imageHeight);
@@ -210,6 +225,9 @@ void CImageProGyuTaeAhnDoc::LoadImageFile(CArchive& ar)
 
 void CImageProGyuTaeAhnDoc::LoadSecondImageFile(CArchive& ar) {
 	CheckLoadedImage(ar);
+	if (depth == 0) {
+		return;
+	}
 
 	std::cout << " >[LoadSecondImageFile] malloc compare_img" << std::endl;
 	compare_img = (unsigned char**)malloc(sizeof(unsigned char*) * imageHeight);
@@ -229,6 +247,7 @@ void CImageProGyuTaeAhnDoc::CheckLoadedImage(CArchive& ar) {
 	CFile* file = ar.GetFile();
 	CString fname = file->GetFileName();
 	CString type, buf;
+
 	if (strcmp(strrchr(fname, '.'), ".ppm") == 0 || strcmp(strrchr(fname, '.'), ".PPM") == 0 ||
 		strcmp(strrchr(fname, '.'), ".pgm") == 0 || strcmp(strrchr(fname, '.'), ".PGM") == 0) {
 		std::cout << " >[CheckLoadedImage] ppm or pgm file" << std::endl;
@@ -240,6 +259,7 @@ void CImageProGyuTaeAhnDoc::CheckLoadedImage(CArchive& ar) {
 			ar.ReadString(buf);
 		} while (buf[0] == '#');
 		sscanf_s(buf, "%d %d", &imageWidth, &imageHeight);
+
 		std::cout << " >[CheckLoadedImage] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << std::endl;
 
 		do {
@@ -251,6 +271,7 @@ void CImageProGyuTaeAhnDoc::CheckLoadedImage(CArchive& ar) {
 		if (strcmp(type, "P5") == 0) depth = 1;
 		else if (strcmp(type, "P6") == 0) depth = 3;
 		else {
+			depth = 0;
 			std::cout << " >[CheckLoadedImage] Unsupported file format. Only can use P5 or P6." << std::endl;
 			AfxMessageBox("Unsupported file format. Only can use P5 or P6.");
 			return;
@@ -264,9 +285,11 @@ void CImageProGyuTaeAhnDoc::CheckLoadedImage(CArchive& ar) {
 			AfxMessageBox("Unsupported file format. Only can use 256x256 raw file.");
 			return;
 		}
+
 		imageWidth = 256;
 		imageHeight = 256;
 		depth = 1;
+
 		std::cout << " >[CheckLoadedImage] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	}
 }
@@ -365,28 +388,32 @@ void CImageProGyuTaeAhnDoc::PixelHistoEQ() {
 	std::cout << "[pDoc] PixelHistoEQ" << std::endl;
 	if (input_img == NULL) Load1Image();
 	std::cout << " >[PixelHistoEQ] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
-	int acc_histo = 0;
-	float N = (float)(imageHeight * imageWidth * depth);
+
+	float N = (float)(imageHeight * imageWidth);
 	int histo[256], sum[256];
 
-	for (int i = 0; i < imageHeight * imageWidth; i++) histo[i] = 0;
-	std::cout << " >[PixelHistoEQ] histo initialization done" << std::endl;
-	for (int y = 0; y < imageHeight; y++) {
-		for (int x = 0; x < imageWidth * depth; x++) {
-			histo[input_img[y][x]] += 1;
+	for (int d = 0; d < depth; d ++) {
+		int acc_histo = 0;
+		for (int i = 0; i < 256; i++) histo[i] = 0;
+		std::cout << " >[PixelHistoEQ] histo initialization done" << std::endl;
+
+		for (int y = 0; y < imageHeight; y++) {
+			for (int x = 0; x < imageWidth; x++) {
+				histo[input_img[y][depth * x + d]] += 1;
+			}
 		}
-	}
-	std::cout << " >[PixelHistoEQ] histo calculation done" << std::endl;
+		std::cout << " >[PixelHistoEQ] histo calculation done" << std::endl;
 
-	for (int i = 0; i < 256; i++) {
-		acc_histo += histo[i];
-		sum[i] = acc_histo;
-	}
-	std::cout << " >[PixelHistoEQ] sum calculation done" << std::endl;
+		for (int i = 0; i < 256; i++) {
+			acc_histo += histo[i];
+			sum[i] = acc_histo;
+		}
+		std::cout << " >[PixelHistoEQ] sum calculation done" << std::endl;
 
-	for (int y = 0; y < imageHeight; y++) {
-		for (int x = 0; x < imageWidth; x++) {
-			output_img[y][x] = (unsigned char)(sum[input_img[y][x]] / N * 255);
+		for (int y = 0; y < imageHeight; y++) {
+			for (int x = 0; x < imageWidth; x++) {
+				output_img[y][depth * x + d] = (unsigned char)(sum[input_img[y][depth * x + d]] / N * 255);
+			}
 		}
 	}
 	std::cout << " >[PixelHistoEQ] Done" << std::endl;
@@ -398,17 +425,42 @@ void CImageProGyuTaeAhnDoc::PixelContrast() {
 	std::cout << " >[PixelContrast] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	float max = 0, min = 255;
 
-	for (int y = 0; y < imageHeight; y++) {
-		for (int x = 0; x < imageWidth; x++) {
-			if (input_img[y][x] > max) max = input_img[y][x];
-			if (input_img[y][x] < min) min = input_img[y][x];
+	if (depth == 1) {
+		for (int y = 0; y < imageHeight; y++) {
+			for (int x = 0; x < imageWidth; x++) {
+				if (input_img[y][x] > max) max = input_img[y][x];
+				if (input_img[y][x] < min) min = input_img[y][x];
+			}
+		}
+	}
+	else if (depth == 3) {
+		for (int y = 0; y < imageHeight; y++) {
+			for (int x = 0; x < imageWidth; x++) {
+				int i = (input_img[y][3 * x] + input_img[y][3 * x + 1] + input_img[y][3 * x + 2]) / 3;
+				if (i > max) max = i;
+				if (i < min) min = i;
+			}
 		}
 	}
 	std::cout << " >[PixelContrast] max: " << max << ", min: " << min << std::endl;
 
-	for (int y = 0; y < imageHeight; y++) {
-		for (int x = 0; x < imageWidth * depth; x++) {
-			output_img[y][x] = (unsigned char)((input_img[y][x] - min) / (max - min) * 255);
+	if (depth == 1) {
+		for (int y = 0; y < imageHeight; y++) {
+			for (int x = 0; x < imageWidth * depth; x++) {
+				output_img[y][x] = (unsigned char)((input_img[y][x] - min) / (max - min) * 255);
+			}
+		}
+	}
+	if (depth == 3) {
+		for (int y = 0; y < imageHeight; y++) {
+			for (int x = 0; x < imageWidth; x++) {
+				int i = (input_img[y][3 * x] + input_img[y][3 * x + 1] + input_img[y][3 * x + 2]) / 3;
+
+				int ip = (int)((i - min) / (max - min) * 255);
+				output_img[y][3 * x] = (unsigned char)input_img[y][3 * x] * ip / i;
+				output_img[y][3 * x + 1] = (unsigned char)input_img[y][3 * x + 1] * ip / i;
+				output_img[y][3 * x + 2] = (unsigned char)input_img[y][3 * x + 2] * ip / i;
+			}
 		}
 	}
 	std::cout << " >[PixelContrast] Done" << std::endl;
@@ -420,10 +472,32 @@ void CImageProGyuTaeAhnDoc::PixelBinarization(int threshold) {
 	std::cout << " >[PixelBinarization] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	std::cout << " >[PixelBinarization] threshold: " << threshold << std::endl;
 
-	for (int y = 0; y < imageHeight; y++) {
-		for (int x = 0; x < imageWidth * depth; x++) {
-			if (input_img[y][x] > threshold) output_img[y][x] = 255;
-			else output_img[y][x] = 0;
+	if (depth == 1) {
+		std::cout << " >[PixelBinarization] Depth 1" << std::endl;
+		for (int y = 0; y < imageHeight; y++) {
+			for (int x = 0; x < imageWidth; x++) {
+				if (input_img[y][x] > threshold) output_img[y][x] = 255;
+				else output_img[y][x] = 0;
+			}
+		}
+	}
+	else if (depth == 3) {
+		std::cout << " >[PixelBinarization] Depth 3" << std::endl;
+		int i = 0;
+		for (int y = 0; y < imageHeight; y++) {
+			for (int x = 0; x < imageWidth; x++) {
+				i = (input_img[y][3 * x] + input_img[y][3 * x + 1] + input_img[y][3 * x + 2]) / 3;
+				if (i > threshold) {
+					output_img[y][3 * x] = 255;
+					output_img[y][3 * x + 1] = 255;
+					output_img[y][3 * x + 2] = 255;
+				}
+				else {
+					output_img[y][3 * x] = 0;
+					output_img[y][3 * x + 1] = 0;
+					output_img[y][3 * x + 2] = 0;
+				}
+			}
 		}
 	}
 	std::cout << " >[PixelBinarization] Done" << std::endl;
@@ -433,6 +507,7 @@ void CImageProGyuTaeAhnDoc::PixelInvert() {
 	std::cout << "[pDoc] PixelInvert" << std::endl;
 	if (input_img == NULL) Load1Image();
 	std::cout << " >[PixelInvert] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
+
 	for (int y = 0; y < imageHeight; y++) {
 		for (int x = 0; x < imageWidth * depth; x++) {
 			output_img[y][x] = 255 - input_img[y][x];
@@ -967,7 +1042,7 @@ void CImageProGyuTaeAhnDoc::Find_Connected_Region(int y, int x, int** label, int
 	if(label[y][x] != 0) return;
 
 	label[y][x] = label_num;
-
+	
 	if (y > 0 && x > 0 && output_img[y - 1][x - 1] == 255)
 		Find_Connected_Region(y - 1, x - 1, label, label_num);
 
@@ -976,7 +1051,7 @@ void CImageProGyuTaeAhnDoc::Find_Connected_Region(int y, int x, int** label, int
 
 	if (y > 0 && x < imageWidth - 1 && output_img[y - 1][x + 1] == 255)
 		Find_Connected_Region(y - 1, x + 1, label, label_num);
-
+	
 	if (x > 0 && output_img[y][x - 1] == 255)
 		Find_Connected_Region(y, x - 1, label, label_num);
 
@@ -996,6 +1071,7 @@ void CImageProGyuTaeAhnDoc::Find_Connected_Region(int y, int x, int** label, int
 void CImageProGyuTaeAhnDoc::Min_Value_Filter(unsigned char background) {
 	std::cout << "[pDoc] Erosion" << std::endl;
 	if (input_img == NULL) Load1Image();
+	
 	std::cout << " >[Erosion] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
 	int min;
@@ -1027,6 +1103,7 @@ void CImageProGyuTaeAhnDoc::Min_Value_Filter(unsigned char background) {
 void CImageProGyuTaeAhnDoc::Max_Value_Filter(unsigned char background) {
 	std::cout << "[pDoc] Dilation" << std::endl;
 	if (input_img == NULL) Load1Image();
+	
 	std::cout << " >[Dilation] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	
 	int max;
@@ -1058,6 +1135,7 @@ void CImageProGyuTaeAhnDoc::Max_Value_Filter(unsigned char background) {
 void CImageProGyuTaeAhnDoc::Opening(unsigned char background) {
 	std::cout << "[pDoc] Opening" << std::endl;
 	if (input_img == NULL) Load1Image();
+	
 	std::cout << " >[Opening] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
 	Min_Value_Filter(background);
@@ -1076,6 +1154,7 @@ void CImageProGyuTaeAhnDoc::Opening(unsigned char background) {
 void CImageProGyuTaeAhnDoc::Closing(unsigned char background) {
 	std::cout << "[pDoc] Closing" << std::endl;
 	if (input_img == NULL) Load1Image();
+	
 	std::cout << " >[Closing] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
 	Max_Value_Filter(background);
@@ -1093,11 +1172,11 @@ void CImageProGyuTaeAhnDoc::Closing(unsigned char background) {
 
 void CImageProGyuTaeAhnDoc::CountCell() {
 	std::cout << "[pDoc] CountCell" << std::endl;
-	if (input_img == NULL) Load1Image();
+	Load1Image();
+	
 	std::cout << " >[CountCell] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
 	char buf[256];
-	int** label;
 	int label_no = 0;
 
 	std::cout << " >[CountCell] Pixel Binarization..." << std::endl;
@@ -1112,20 +1191,22 @@ void CImageProGyuTaeAhnDoc::CountCell() {
 	Opening(0);
 
 	std::cout << " >[CountCell] malloc label" << std::endl;
-	label = (int**)malloc(imageHeight * sizeof(int));
-	for (int y = 0; y < imageHeight; y++)
+	int x, y;
+	int** label = (int**)malloc(imageHeight * sizeof(int));
+	for (y = 0; y < imageHeight; y++) {
 		label[y] = (int*)malloc(imageWidth * sizeof(int));
+	}
 
 	std::cout << " >[CountCell] initialize label" << std::endl;
-	for (int y = 0; y < imageHeight; y++) {
-		for (int x = 0; x < imageWidth; x++) {
+	for (y = 0; y < imageHeight; y++) {
+		for (x = 0; x < imageWidth; x++) {
 			label[y][x] = 0;
 		}
 	}
 
 	std::cout << " >[CountCell] Counting..." << std::endl;
-	for (int y = 0; y < imageHeight; y++) {
-		for (int x = 0; x < imageWidth; x++) {
+	for (y = 0; y < imageHeight; y++) {
+		for (x = 0; x < imageWidth; x++) {
 			if (output_img[y][x] == 255 && label[y][x] == 0) {
 				label_no = label_no + 1;
 				Find_Connected_Region(y, x, label, label_no);
@@ -1142,6 +1223,7 @@ void CImageProGyuTaeAhnDoc::CountCell() {
 void CImageProGyuTaeAhnDoc::GeometryZoominPixelCopy() {
 	std::cout << "[pDoc] GeometryZoominPixelCopy" << std::endl;
 	if (input_img == NULL) Load1Image();
+	
 	std::cout << " >[GeometryZoominPixelCopy] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
 	gImageWidth = imageWidth * 3;
