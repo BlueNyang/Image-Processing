@@ -95,5 +95,7 @@ public:
 	
 	//Image Geometric Processing
 	void GeometryZoominPixelCopy();
+	void GeometryZoominInterpolation();
+	void GeometryZoomoutSubsampling();
 };
 	

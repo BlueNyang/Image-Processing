@@ -80,6 +80,8 @@ public:
 	afx_msg void OnClosing255();
 	afx_msg void OnCountCell();
 	afx_msg void OnGeometryZoominPixelCopy();
+	afx_msg void OnGeometryZoominInterpolation();
+	afx_msg void OnGeometryZoomoutSubsampling();
 };
 
 #ifndef _DEBUG  // debug version in ImagePro_GyuTae_AhnView.cpp

@@ -61,6 +61,8 @@ BEGIN_MESSAGE_MAP(CImageProGyuTaeAhnView, CScrollView)
 	ON_COMMAND(ID_CLOSING_255, &CImageProGyuTaeAhnView::OnClosing255)
 	ON_COMMAND(ID_COUNT_CELL, &CImageProGyuTaeAhnView::OnCountCell)
 	ON_COMMAND(ID_GEOMETRY_ZOOMIN_PIXEL_COPY, &CImageProGyuTaeAhnView::OnGeometryZoominPixelCopy)
+	ON_COMMAND(ID_GEOMETRY_ZOOMIN_INTERPOLATION, &CImageProGyuTaeAhnView::OnGeometryZoominInterpolation)
+	ON_COMMAND(ID_GEOMETRY_ZOOMOUT_SUBSAMPLING, &CImageProGyuTaeAhnView::OnGeometryZoomoutSubsampling)
 END_MESSAGE_MAP()
 
 // CImageProGyuTaeAhnView construction/destruction
@@ -639,6 +641,34 @@ void CImageProGyuTaeAhnView::OnGeometryZoominPixelCopy()
 		return;
 
 	pDoc->GeometryZoominPixelCopy();
+
+	viewMode = TWO_IMAGES_SCALED;
+	Invalidate(FALSE);
+}
+
+void CImageProGyuTaeAhnView::OnGeometryZoominInterpolation() {
+	std::cout << "[pView] OnGeometryZoominPixelInterpolation" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc)
+		return;
+	pDoc->GeometryZoominInterpolation();
+
+	viewMode = TWO_IMAGES_SCALED;
+	Invalidate(FALSE);
+}
+
+
+void CImageProGyuTaeAhnView::OnGeometryZoomoutSubsampling()
+{
+	std::cout << "[pView] OnGeometryZoomoutSubsampling" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc)
+		return;
+	pDoc->GeometryZoomoutSubsampling();
 
 	viewMode = TWO_IMAGES_SCALED;
 	Invalidate(FALSE);

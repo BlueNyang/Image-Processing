@@ -853,13 +853,13 @@ void CImageProGyuTaeAhnDoc::RegionRobert() {
 	if (input_img == NULL) Load1Image();
 	std::cout << " >[PixelRegionRobert] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	float mask1[3][3] = {
-		{1, 0, 0},
-		{0, -1, 0},
+		{-1, 0, 0},
+		{0, 1, 0},
 		{0, 0, 0}
 	};
 	float mask2[3][3] = {
+		{0, 0, -1},
 		{0, 1, 0},
-		{-1, 0, 0},
 		{0, 0, 0}
 	};
 
@@ -1254,3 +1254,114 @@ void CImageProGyuTaeAhnDoc::GeometryZoominPixelCopy() {
 	}
 	std::cout << " >[GeometryZoominPixelCopy] Done" << std::endl;
 }
+
+void CImageProGyuTaeAhnDoc::GeometryZoominInterpolation() {
+	std::cout << "[pDoc] GeometryZoominInterpolation" << std::endl;
+	if (input_img == NULL) Load1Image();
+
+	std::cout << " >[GeometryZoominInterpolation] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
+
+	float src_x, src_y;
+	float alpha, beta;
+	int scale_x, scale_y;
+	int E, F;
+	int Ax, Ay, Bx, By, Cx, Cy, Dx, Dy;
+
+	scale_x = 3;
+	scale_y = 3;
+
+	gImageWidth = imageWidth * scale_x;
+	gImageHeight = imageHeight * scale_y;
+
+	std::cout << " >[GeometryZoominInterpolation] malloc gOutput_img" << std::endl;
+	gOutput_img = (unsigned char**)malloc(gImageHeight * sizeof(unsigned char*));
+
+	for (int i = 0; i < gImageHeight; i++) {
+		gOutput_img[i] = (unsigned char*)malloc(gImageWidth * depth);
+	}
+
+	std::cout << " >[GeometryZoominInterpolation] Copying input_img to gOutput_img" << std::endl;
+	for (int y = 0; y < gImageHeight; y++) {
+		for (int x = 0; x < gImageWidth; x++) {
+			src_x = (float)x / scale_x;
+			src_y = (float)y / scale_y;
+
+			alpha = src_x - x / scale_x;
+			beta = src_y - y / scale_y;
+
+			Ax = x / scale_x;
+			Ay = y / scale_y;
+			Bx = Ax + 1;
+			By = Ay;
+			Cx = Ax;
+			Cy = Ay + 1;
+			Dx = Ax + 1;
+			Dy = Ay + 1;
+
+			if (Bx > imageWidth - 1) Bx = imageWidth - 1;
+			if (Dx > imageWidth - 1) Dx = imageWidth - 1;
+			if (Cy > imageHeight - 1) Cy = imageHeight - 1;
+			if (Dy > imageHeight - 1) Dy = imageHeight - 1;
+
+			if (depth == 1) {
+				E = (int)((1 - alpha) * input_img[Ay][Ax] + alpha * input_img[By][Bx]);
+				F = (int)((1 - alpha) * input_img[Cy][Cx] + alpha * input_img[Dy][Dx]);
+
+				gOutput_img[y][x] = (unsigned char)((1 - beta) * E + beta * F);
+			}
+			//when the image is color image
+			else if (depth == 3) {
+				E = (int)((1 - alpha) * input_img[Ay][3 * Ax] + alpha * input_img[By][3 * Bx]);
+				F = (int)((1 - alpha) * input_img[Cy][3 * Cx] + alpha * input_img[Dy][3 * Dx]);
+				gOutput_img[y][3 * x] = (unsigned char)((1 - beta) * E + beta * F);
+
+				E = (int)((1 - alpha) * input_img[Ay][3 * Ax + 1] + alpha * input_img[By][3 * Bx + 1]);
+				F = (int)((1 - alpha) * input_img[Cy][3 * Cx + 1] + alpha * input_img[Dy][3 * Dx + 1]);
+				gOutput_img[y][3 * x + 1] = (unsigned char)((1 - beta) * E + beta * F);
+
+				E = (int)((1 - alpha) * input_img[Ay][3 * Ax + 2] + alpha * input_img[By][3 * Bx + 2]);
+				F = (int)((1 - alpha) * input_img[Cy][3 * Cx + 2] + alpha * input_img[Dy][3 * Dx + 2]);
+				gOutput_img[y][3 * x + 2] = (unsigned char)((1 - beta) * E + beta * F);
+				
+			}
+		}
+	}
+	std::cout << " >[GeometryZoominInterpolation] Done" << std::endl;
+} // GeometryZoominInterpolation
+
+void CImageProGyuTaeAhnDoc::GeometryZoomoutSubsampling() {
+	std::cout << "[pDoc] GeometryZoomoutSubsampling" << std::endl;
+	if (input_img == NULL) Load1Image();
+
+	std::cout << " >[GeometryZoomoutSubsampling] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
+
+	int src_x, src_y;
+	int scale_x = 3, scale_y = 3;
+
+	gImageWidth = (imageWidth % scale_x == 0) ? imageWidth / scale_x : imageWidth / scale_x + 1;
+	gImageHeight = (imageHeight % scale_y == 0) ? imageHeight / scale_y : imageHeight / scale_y + 1;
+
+	std::cout << " >[GeometryZoomoutSubsampling] malloc gOutput_img" << std::endl;
+	gOutput_img = (unsigned char**)malloc(gImageHeight * sizeof(unsigned char*));
+	for (int i = 0; i < gImageHeight; i++) {
+		gOutput_img[i] = (unsigned char*)malloc(gImageWidth * depth);
+	}
+
+	std::cout << " >[GeometryZoomoutSubsampling] Copying input_img to gOutput_img" << std::endl;
+	for (int y = 0; y < gImageHeight; y++) {
+		for (int x = 0; x < gImageWidth; x++) {
+			src_x = x * scale_x;
+			src_y = y * scale_y;
+
+			if (depth == 1) {
+				gOutput_img[y][x] = input_img[src_y][src_x];
+			}
+			else if (depth == 3) {
+				gOutput_img[y][3 * x] = input_img[src_y][3 * src_x];
+				gOutput_img[y][3 * x + 1] = input_img[src_y][3 * src_x + 1];
+				gOutput_img[y][3 * x + 2] = input_img[src_y][3 * src_x + 2];
+			}
+		}
+	}
+	std::cout << " >[GeometryZoomoutSubsampling] Done" << std::endl;
+} // GeometryZoomoutSubsampling
