@@ -63,6 +63,10 @@ BEGIN_MESSAGE_MAP(CImageProGyuTaeAhnView, CScrollView)
 	ON_COMMAND(ID_GEOMETRY_ZOOMIN_PIXEL_COPY, &CImageProGyuTaeAhnView::OnGeometryZoominPixelCopy)
 	ON_COMMAND(ID_GEOMETRY_ZOOMIN_INTERPOLATION, &CImageProGyuTaeAhnView::OnGeometryZoominInterpolation)
 	ON_COMMAND(ID_GEOMETRY_ZOOMOUT_SUBSAMPLING, &CImageProGyuTaeAhnView::OnGeometryZoomoutSubsampling)
+	ON_COMMAND(ID_GEOMETRY_ZOOMOUT_AVERAGE, &CImageProGyuTaeAhnView::OnGeometryZoomoutAverage)
+	ON_COMMAND(ID_GEOMETRY_ROTATE, &CImageProGyuTaeAhnView::OnGeometryRotate)
+	ON_COMMAND(ID_GEOMETRY_VERTICAL_FLIP, &CImageProGyuTaeAhnView::OnGeometryVerticalFlip)
+	ON_COMMAND(ID_GEOMETRY_HORIZONTAL_FLIP, &CImageProGyuTaeAhnView::OnGeometryHorizontalFlip)
 END_MESSAGE_MAP()
 
 // CImageProGyuTaeAhnView construction/destruction
@@ -669,6 +673,66 @@ void CImageProGyuTaeAhnView::OnGeometryZoomoutSubsampling()
 	if (!pDoc)
 		return;
 	pDoc->GeometryZoomoutSubsampling();
+
+	viewMode = TWO_IMAGES_SCALED;
+	Invalidate(FALSE);
+}
+
+
+void CImageProGyuTaeAhnView::OnGeometryZoomoutAverage()
+{
+	std::cout << "[pView] OnGeometryZoomoutAverage" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc)
+		return;
+	pDoc->GeometryZoomoutAverage();
+
+	viewMode = TWO_IMAGES_SCALED;
+	Invalidate(FALSE);
+}
+
+
+void CImageProGyuTaeAhnView::OnGeometryRotate()
+{
+	std::cout << "[pView] OnGeometryRotate" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc)
+		return;
+	pDoc->GeometryRotate();
+
+	viewMode = TWO_IMAGES_SCALED;
+	Invalidate(FALSE);
+}
+
+
+void CImageProGyuTaeAhnView::OnGeometryVerticalFlip()
+{
+	std::cout << "[pView] OnGeometryVerticalFlip" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc)
+		return;
+	pDoc->GeometryVerticalFlip();
+
+	viewMode = TWO_IMAGES_SCALED;
+	Invalidate(FALSE);
+}
+
+
+void CImageProGyuTaeAhnView::OnGeometryHorizontalFlip()
+{
+	std::cout << "[pView] OnGeometryHorizontalFlip" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc)
+		return;
+	pDoc->GeometryHorizontalFlip();
 
 	viewMode = TWO_IMAGES_SCALED;
 	Invalidate(FALSE);

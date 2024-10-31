@@ -97,5 +97,9 @@ public:
 	void GeometryZoominPixelCopy();
 	void GeometryZoominInterpolation();
 	void GeometryZoomoutSubsampling();
+	void GeometryZoomoutAverage();
+	void GeometryRotate();
+	void GeometryVerticalFlip();
+	void GeometryHorizontalFlip();
 };
 	

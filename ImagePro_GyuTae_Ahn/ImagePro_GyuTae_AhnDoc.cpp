@@ -20,6 +20,8 @@
 #define new DEBUG_NEW
 #endif
 
+#define PI 3.14159265358979323846
+
 // CImageProGyuTaeAhnDoc
 
 IMPLEMENT_DYNCREATE(CImageProGyuTaeAhnDoc, CDocument)
@@ -1365,3 +1367,190 @@ void CImageProGyuTaeAhnDoc::GeometryZoomoutSubsampling() {
 	}
 	std::cout << " >[GeometryZoomoutSubsampling] Done" << std::endl;
 } // GeometryZoomoutSubsampling
+
+void CImageProGyuTaeAhnDoc::GeometryZoomoutAverage() {
+	std::cout << "[pDoc] GeometryZoomoutAverage" << std::endl;
+	if (input_img == NULL) Load1Image();
+
+	std::cout << " >[GeometryZoomoutAverage] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
+
+	int src_x, src_y;
+	int scale_x = 3, scale_y = 3;
+	int sum_r, sum_g, sum_b, sum;
+
+	gImageWidth = (imageWidth % scale_x == 0) ? imageWidth / scale_x : imageWidth / scale_x + 1;
+	gImageHeight = (imageHeight % scale_y == 0) ? imageHeight / scale_y : imageHeight / scale_y + 1;
+
+	std::cout << " >[GeometryZoomoutAverage] malloc gOutput_img" << std::endl;
+	gOutput_img = (unsigned char**)malloc(gImageHeight * sizeof(unsigned char*));
+	for (int i = 0; i < gImageHeight; i++) {
+		gOutput_img[i] = (unsigned char*)malloc(gImageWidth * depth);
+	}
+
+	std::cout << " >[GeometryZoomoutAverage] Copying input_img to gOutput_img" << std::endl;
+	for (int y = 0; y < gImageHeight; y++) {
+		for (int x = 0; x < gImageWidth; x++) {
+			src_x = x * scale_x;
+			src_y = y * scale_y;
+
+			if (depth == 1) {
+				sum = 0;
+				for (int i = 0; i < scale_y; i++) {
+					for (int j = 0; j < scale_x; j++) {
+						if (src_y + i < imageHeight && src_x + j < imageWidth) {
+							sum += input_img[src_y + i][src_x + j];
+						}
+					}
+				}
+				gOutput_img[y][x] = sum / (scale_x * scale_y);
+			}
+			else if (depth == 3) {
+				sum_r = 0;
+				sum_g = 0;
+				sum_b = 0;
+				for (int i = 0; i < scale_y; i++) {
+					for (int j = 0; j < scale_x; j++) {
+						if (src_y + i < imageHeight && src_x + j < imageWidth) {
+							sum_r += input_img[src_y + i][3 * (src_x + j)];
+							sum_g += input_img[src_y + i][3 * (src_x + j) + 1];
+							sum_b += input_img[src_y + i][3 * (src_x + j) + 2];
+						}
+					}
+				}
+				gOutput_img[y][3 * x] = sum_r / (scale_x * scale_y);
+				gOutput_img[y][3 * x + 1] = sum_g / (scale_x * scale_y);
+				gOutput_img[y][3 * x + 2] = sum_b / (scale_x * scale_y);
+			
+			}
+		}
+	}
+} //GeometryZoomoutAverage
+
+void  CImageProGyuTaeAhnDoc::GeometryRotate() {
+	std::cout << "[pDoc] GeometryRotate" << std::endl;
+	if (input_img == NULL) Load1Image();
+
+	std::cout << " >[GeometryRotate] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
+
+	float angle = 150.0;
+	float theta = PI / 180.0 * angle;
+
+	int Cx = imageWidth / 2;
+	int Cy = imageHeight / 2;
+
+	int Hy = imageHeight - 1;
+
+	gImageWidth = (int)(imageHeight * fabs(sin(theta)) + imageWidth * fabs(cos(theta)));
+	gImageHeight = (int)(imageHeight * fabs(cos(theta)) + imageWidth * fabs(sin(theta)));
+	//gImageWidth = (int)(imageHeight * cos(PI / 2.0 - theta) + imageWidth * cos(theta));
+	//gImageHeight = (int)(imageHeight * cos(theta) + imageWidth * cos(PI / 2.0 - theta));
+
+	std::cout << " >[GeometryRotate] gImageWidth: " << gImageWidth << ", gImageHeight: " << gImageHeight << std::endl;
+
+	std::cout << " >[GeometryRotate] malloc gOutput_img" << std::endl;
+	gOutput_img = (unsigned char**)malloc(gImageHeight * sizeof(unsigned char*));
+	for (int i = 0; i < gImageHeight; i++) {
+		gOutput_img[i] = (unsigned char*)malloc(gImageWidth * depth);
+	}
+	for (int y = 0; y < gImageHeight; y++) {
+		for (int x = 0; x < gImageWidth; x++) {
+			gOutput_img[y][x] = 255;
+		}
+	}
+
+	int xDiff = (gImageWidth - imageWidth) / 2;
+	int yDiff = (gImageHeight - imageHeight) / 2;
+
+	std::cout << " >[GeometryRotate] Copying input_img to gOutput_img" << std::endl;
+	int x_source, y_source;
+	for (int y = -yDiff; y < gImageHeight - yDiff; y++) {
+		for (int x = -xDiff; x < gImageWidth - xDiff; x++) {
+			x_source = (int)(((Hy - y) - Cy) * sin(theta) + (x - Cx) * cos(theta) + Cx);
+			y_source = (int)(((Hy - y) - Cy) * cos(theta) - (x - Cx) * sin(theta) + Cy);
+
+			y_source = Hy - y_source;
+			if (x_source < 0 || x_source > imageWidth - 1 || y_source < 0 || y_source > imageHeight - 1) {
+				if (depth == 1) gOutput_img[y + yDiff][x + xDiff] = 255;
+				else if (depth == 3) {
+					gOutput_img[y + yDiff][3 * (x + xDiff)] = 255;
+					gOutput_img[y + yDiff][3 * (x + xDiff) + 1] = 255;
+					gOutput_img[y + yDiff][3 * (x + xDiff) + 2] = 255;
+				}
+			}
+			else {
+				if (depth == 1) {
+					gOutput_img[y + yDiff][x + xDiff] = input_img[y_source][x_source];
+				}
+				else if (depth == 3) {
+					gOutput_img[y + yDiff][3 * (x + xDiff)] = input_img[y_source][3 * x_source];
+					gOutput_img[y + yDiff][3 * (x + xDiff) + 1] = input_img[y_source][3 * x_source + 1];
+					gOutput_img[y + yDiff][3 * (x + xDiff) + 2] = input_img[y_source][3 * x_source + 2];
+				}
+			}
+		}
+	}
+} //GeometryRotate
+
+void CImageProGyuTaeAhnDoc::GeometryVerticalFlip() {
+	std::cout << "[pDoc] GeometryVerticalFlip" << std::endl;
+	if (input_img == NULL) Load1Image();
+
+	std::cout << " >[GeometryVerticalFlip] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
+
+	gImageWidth = imageWidth;
+	gImageHeight = imageHeight;
+
+	std::cout << " >[GeometryVerticalFlip] malloc gOutput_img" << std::endl;
+	gOutput_img = (unsigned char**)malloc(gImageHeight * sizeof(unsigned char*));
+	for (int i = 0; i < gImageHeight; i++) {
+		gOutput_img[i] = (unsigned char*)malloc(gImageWidth * depth);
+	}
+
+	std::cout << " >[GeometryVerticalFlip] Copying input_img to gOutput_img" << std::endl;
+	for (int y = 0; y < gImageHeight; y++) {
+		for (int x = 0; x < gImageWidth; x++) {
+			if (depth == 1) {
+				gOutput_img[y][x] = input_img[gImageHeight - 1 - y][x];
+			}
+			else if (depth == 3) {
+				gOutput_img[y][3 * x] = input_img[gImageHeight - 1 - y][3 * x];
+				gOutput_img[y][3 * x + 1] = input_img[gImageHeight - 1 - y][3 * x + 1];
+				gOutput_img[y][3 * x + 2] = input_img[gImageHeight - 1 - y][3 * x + 2];
+			}
+		}
+	}
+	std::cout << " >[GeometryVerticalFlip] Done" << std::endl;
+
+} //GeometryVerticalFlip
+
+void CImageProGyuTaeAhnDoc::GeometryHorizontalFlip() {
+	std::cout << "[pDoc] GeometryHorizontalFlip" << std::endl;
+	if (input_img == NULL) Load1Image();
+
+	std::cout << " >[GeometryHorizontalFlip] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
+
+	gImageWidth = imageWidth;
+	gImageHeight = imageHeight;
+
+	std::cout << " >[GeometryHorizontalFlip] malloc gOutput_img" << std::endl;
+	gOutput_img = (unsigned char**)malloc(gImageHeight * sizeof(unsigned char*));
+	for (int i = 0; i < gImageHeight; i++) {
+		gOutput_img[i] = (unsigned char*)malloc(gImageWidth * depth);
+	}
+
+	std::cout << " >[GeometryHorizontalFlip] Copying input_img to gOutput_img" << std::endl;
+	for (int y = 0; y < gImageHeight; y++) {
+		for (int x = 0; x < gImageWidth; x++) {
+			if (depth == 1) {
+				gOutput_img[y][x] = input_img[y][gImageWidth - 1 - x];
+			}
+			else if (depth == 3) {
+				gOutput_img[y][3 * x] = input_img[y][3 * (gImageWidth - 1 - x)];
+				gOutput_img[y][3 * x + 1] = input_img[y][3 * (gImageWidth - 1 - x) + 1];
+				gOutput_img[y][3 * x + 2] = input_img[y][3 * (gImageWidth - 1 - x) + 2];
+			}
+		}
+	}
+	std::cout << " >[GeometryHorizontalFlip] Done" << std::endl;
+
+} //GeometryHorizontalFlip

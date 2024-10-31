@@ -82,6 +82,10 @@ public:
 	afx_msg void OnGeometryZoominPixelCopy();
 	afx_msg void OnGeometryZoominInterpolation();
 	afx_msg void OnGeometryZoomoutSubsampling();
+	afx_msg void OnGeometryZoomoutAverage();
+	afx_msg void OnGeometryRotate();
+	afx_msg void OnGeometryVerticalFlip();
+	afx_msg void OnGeometryHorizontalFlip();
 };
 
 #ifndef _DEBUG  // debug version in ImagePro_GyuTae_AhnView.cpp
