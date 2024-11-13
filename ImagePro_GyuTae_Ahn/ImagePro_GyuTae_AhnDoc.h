@@ -14,6 +14,13 @@ protected: // create from serialization only
 
 // Attributes
 public:
+	typedef struct {
+		int Px;
+		int Py;
+		int Qx;
+		int Qy;
+	} control_line;
+
 	unsigned char** input_img;
 	unsigned char** compare_img;
 	unsigned char** output_img;
@@ -21,6 +28,8 @@ public:
 
 	int gImageWidth, gImageHeight;
 	unsigned char** gOutput_img;
+
+	unsigned char** morphed_img[10];
 
 // Operations
 public:
@@ -101,5 +110,12 @@ public:
 	void GeometryRotate();
 	void GeometryVerticalFlip();
 	void GeometryHorizontalFlip();
+	void GeometryWarping(control_line source_lines[], control_line dest_lines[], int control_line_num);
+	void GeometryWarpingNormal();
+	void GeometryMyImageWarping();
+	void GeometryMyImageWarping_Smile();
+	void GeometryMorphing(control_line source_lines[], control_line dest_lines[], int control_line_num);
+	void GeometryMorphingNormal();
+	void GeometryMorphingMyImg();
 };
 	

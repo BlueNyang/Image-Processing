@@ -15,12 +15,14 @@
 #include <iostream>
 #include <algorithm>
 #include <propkey.h>
+#include <math.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
 #define PI 3.14159265358979323846
+#define NUM_FRAMES 10
 
 // CImageProGyuTaeAhnDoc
 
@@ -1554,3 +1556,301 @@ void CImageProGyuTaeAhnDoc::GeometryHorizontalFlip() {
 	std::cout << " >[GeometryHorizontalFlip] Done" << std::endl;
 
 } //GeometryHorizontalFlip
+
+void CImageProGyuTaeAhnDoc::GeometryWarping(control_line source_lines[], control_line dest_lines[], int control_line_num) {
+	std::cout << "[pDoc] GeometryMorphing" << std::endl;
+	if (input_img == NULL) Load1Image();
+
+	std::cout << " >[GeometryMorphing] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
+
+	int num_lines = control_line_num;
+	std::cout << " >[GeometryMorphing] num_lines: " << num_lines << std::endl;
+
+	double u;
+	double h;
+	double d;
+	double tx, ty; 
+	double xp, yp; 
+	double weight; 
+	double totalWeight;
+	double a = 0.001;
+	double b = 2.0;
+	double p = 0.75;
+	int x1, x2, y1, y2;
+	int src_x1, src_y1, src_x2, src_y2;
+	double src_line_length, dest_line_length;
+	int source_x, source_y;
+	int last_row, last_col;
+	last_row = imageHeight - 1;
+	last_col = imageWidth - 1;
+	std::cout << " >[GeometryMorphing] a: " << a << ", b: " << b << ", p: " << p << std::endl;
+
+	std::cout << " >[GeometryMorphing] Calculating..." << std::endl;
+	for (int y = 0; y < imageHeight; y++)
+	{
+		for (int x = 0; x < imageWidth; x++)
+		{
+			totalWeight = 0.0;
+			tx = 0.0;
+			ty = 0.0;
+
+			for (int line = 0; line < num_lines; line++)
+			{
+				x1 = dest_lines[line].Px;
+				y1 = dest_lines[line].Py;
+				x2 = dest_lines[line].Qx;
+				y2 = dest_lines[line].Qy;
+				dest_line_length = sqrt((double)(x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+				u = (double)((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) /
+					(double)((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+				h = (double)((y - y1) * (x2 - x1) - (x - x1) * (y2 - y1)) / dest_line_length;
+
+				if (u < 0) d = sqrt((double)(x - x1) * (x - x1) + (y - y1) * (y - y1));
+				else if (u > 1) d = sqrt((double)(x - x2) * (x - x2) + (y - y2) * (y - y2));
+				else d = fabs(h);
+				src_x1 = source_lines[line].Px;
+				src_y1 = source_lines[line].Py;
+				src_x2 = source_lines[line].Qx;
+				src_y2 = source_lines[line].Qy;
+				src_line_length = sqrt((double)(src_x2 - src_x1) * (src_x2 - src_x1) + (src_y2 - src_y1) * (src_y2 - src_y1));
+
+				xp = src_x1 + u * (src_x2 - src_x1) - h * (src_y2 - src_y1) / src_line_length;
+				yp = src_y1 + u * (src_y2 - src_y1) + h * (src_x2 - src_x1) / src_line_length;
+				weight = pow((pow((double)(dest_line_length), p) / (a + d)), b);
+				tx += (xp - x) * weight;
+				ty += (yp - y) * weight;
+				totalWeight += weight;
+			}
+			source_x = x + (int)(tx / totalWeight + 0.5);
+			source_y = y + (int)(ty / totalWeight + 0.5);
+			if (source_x < 0) source_x = 0;
+			if (source_x > last_col) source_x = last_col;
+			if (source_y < 0) source_y = 0;
+			if (source_y > last_row) source_y = last_row;
+			output_img[y][x] = input_img[source_y][source_x];
+		}
+	}
+	std::cout << " >[GeometryMorphing] Done" << std::endl;
+} // GeometryWarping
+
+void CImageProGyuTaeAhnDoc::GeometryWarpingNormal() {
+	control_line source_lines[23] = {
+		{116,7,207,5},{34,109,90,21},{55,249,30,128},{118,320,65,261},
+		{123,321,171,321},{179,319,240,264},{247,251,282,135},{281,114,228,8},
+		{78,106,123,109},{187,115,235,114},{72,142,99,128},{74,150,122,154},
+		{108,127,123,146},{182,152,213,132},{183,159,229,157},{219,131,240,154},
+		{80,246,117,212},{127,222,146,223},{154,227,174,221},{228,252,183,213},
+		{114,255,186,257},{109,258,143,277},{152,278,190,262} };
+
+	control_line dest_lines[23] = {
+		{120,8,200,6},{12,93,96,16},{74,271,16,110},{126,336,96,290},
+		{142,337,181,335},{192,335,232,280},{244,259,288,108},{285,92,212,13},
+		{96,135,136,118},{194,119,223,125},{105,145,124,134},{110,146,138,151},
+		{131,133,139,146},{188,146,198,134},{189,153,218,146},{204,133,221,140},
+		{91,268,122,202},{149,206,159,209},{170,209,181,204},{235,265,208,199},
+		{121,280,205,284},{112,286,160,301},{166,301,214,287} };
+
+	GeometryWarping(source_lines, dest_lines, 23);
+}
+
+void CImageProGyuTaeAhnDoc::GeometryMyImageWarping() {
+	control_line source_lines[5] = {
+		{0, 0, 299, 0}, {0, 339, 299, 339}, {0, 0, 0, 339}, {299, 0, 299, 339}, {161, 168, 161, 205} };
+
+	control_line dest_lines[5] = {
+		{0, 0, 299, 0}, {0, 339, 299, 339}, {0, 0, 0, 339}, {299, 0, 299, 339}, {161, 168, 161, 235} };
+
+	GeometryWarping(source_lines, dest_lines, 5);
+} // GeometryWarping
+
+void CImageProGyuTaeAhnDoc::GeometryMyImageWarping_Smile() {
+	control_line source_lines[8] = {
+		{0, 0, 299, 0}, {0, 339, 299, 339}, {0, 0, 0, 339}, {299, 0, 299, 339},
+		{132, 248, 151, 245}, {151, 245, 166, 246}, {166, 246, 185, 245}, {185, 245, 205, 244} };
+
+	control_line dest_lines[8] = {
+		{0, 0, 299, 0}, {0, 339, 299, 339}, {0, 0, 0, 339}, {299, 0, 299, 339},
+		{127, 238, 151, 245}, {151, 245, 166, 246}, {166, 246, 185, 245}, {185, 245, 207, 219} };
+
+	GeometryWarping(source_lines, dest_lines, 5);
+} // GeometryWarping
+
+void CImageProGyuTaeAhnDoc::GeometryMorphing(control_line source_lines[], control_line dest_lines[], int control_line_num) {
+	std::cout << "[pDoc] GeometryMorphing" << std::endl;
+	if (input_img == NULL) Load2Images();
+
+	std::cout << " >[GeometryMorphing] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
+
+	int num_lines = control_line_num;
+	
+	std::cout << " >[GeometryMorphing] num_lines: " << num_lines << std::endl;
+
+	double u;
+	double h;
+	double d;
+	double tx, ty;
+	double xp, yp;
+	double weight;
+	double totalWeight;
+	double a = 0.001, b = 2.0, p = 0.75;
+	unsigned char** warped_img;
+	unsigned char** warped_img2;
+	double fweight;
+	control_line warp_lines[23];
+	double tx2, ty2, xp2, yp2;
+	int dest_x1, dest_y1, dest_x2, dest_y2, source_x2, source_y2;
+	int x1, x2, y1, y2, src_x1, src_y1, src_x2, src_y2;
+	double src_line_length, dest_line_length;
+	int source_x, source_y, last_row, last_col;
+
+	std::cout << " >[GeometryMorphing] a: " << a << ", b: " << b << ", p: " << p << std::endl;
+
+	std::cout << " >[GeometryMorphing] malloc warped_img" << std::endl;
+	warped_img = (unsigned char**)malloc(imageHeight * sizeof(unsigned char*));
+	for (int i = 0; i < imageHeight; i++) {
+		warped_img[i] = (unsigned char*)malloc(imageWidth * depth);
+	}
+
+	std::cout << " >[GeometryMorphing] malloc warped_img2" << std::endl;
+	warped_img2 = (unsigned char**)malloc(imageHeight * sizeof(unsigned char*));
+	for (int i = 0; i < imageHeight; i++) {
+		warped_img2[i] = (unsigned char*)malloc(imageWidth * depth);
+	}
+
+	for (int i = 0; i < NUM_FRAMES; i++) {
+		morphed_img[i] = (unsigned char**)malloc(imageHeight * sizeof(unsigned char*));
+		for (int j = 0; j < imageHeight; j++) {
+			morphed_img[i][j] = (unsigned char*)malloc(imageWidth * depth);
+		}
+	}
+	last_row = imageHeight - 1;
+	last_col = imageWidth - 1;
+
+	for (int frame = 1; frame <= NUM_FRAMES; frame++)
+	{
+		fweight = (double)(frame) / NUM_FRAMES;
+		for (int line = 0; line < num_lines; line++)
+		{
+			warp_lines[line].Px = (int)(source_lines[line].Px +
+				(dest_lines[line].Px - source_lines[line].Px) * fweight);
+			warp_lines[line].Py = (int)(source_lines[line].Py +
+				(dest_lines[line].Py - source_lines[line].Py) * fweight);
+			warp_lines[line].Qx = (int)(source_lines[line].Qx +
+				(dest_lines[line].Qx - source_lines[line].Qx) * fweight);
+			warp_lines[line].Qy = (int)(source_lines[line].Qy +
+				(dest_lines[line].Qy - source_lines[line].Qy) * fweight);
+		}
+		for (int y = 0; y < imageHeight; y++)
+		{
+			for (int x = 0; x < imageWidth; x++)
+			{
+				totalWeight = 0.0;
+				tx = 0.0;
+				ty = 0.0;
+				tx2 = 0.0;
+				ty2 = 0.0;
+				for (int line = 0; line < num_lines; line++)
+				{
+					x1 = warp_lines[line].Px;
+					y1 = warp_lines[line].Py;
+					x2 = warp_lines[line].Qx;
+					y2 = warp_lines[line].Qy;
+					dest_line_length = sqrt((double)(x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+					u = (double)((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) /
+						(double)((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+					h = (double)((y - y1) * (x2 - x1) - (x - x1) * (y2 - y1)) / dest_line_length;
+
+					if (u < 0) d = sqrt((double)(x - x1) * (x - x1) + (y - y1) * (y - y1));
+					else if (u > 1) d = sqrt((double)(x - x2) * (x - x2) + (y - y2) * (y - y2));
+					else d = fabs(h);
+					src_x1 = source_lines[line].Px;
+					src_y1 = source_lines[line].Py;
+					src_x2 = source_lines[line].Qx;
+					src_y2 = source_lines[line].Qy;
+					src_line_length = sqrt((double)(src_x2 - src_x1) * (src_x2 - src_x1) + (src_y2 - src_y1) * (src_y2 - src_y1));
+					dest_x1 = dest_lines[line].Px;
+					dest_y1 = dest_lines[line].Py;
+					dest_x2 = dest_lines[line].Qx;
+					dest_y2 = dest_lines[line].Qy;
+					dest_line_length = sqrt((double)(dest_x2 - dest_x1) * (dest_x2 - dest_x1) + (dest_y2 - dest_y1) * (dest_y2 - dest_y1));
+
+					xp = src_x1 + u * (src_x2 - src_x1) - h * (src_y2 - src_y1) / src_line_length;
+					yp = src_y1 + u * (src_y2 - src_y1) + h * (src_x2 - src_x1) / src_line_length;
+					xp2 = dest_x1 + u * (dest_x2 - dest_x1) - h * (dest_y2 - dest_y1) / dest_line_length;
+					yp2 = dest_y1 + u * (dest_y2 - dest_y1) + h * (dest_x2 - dest_x1) / dest_line_length;
+					weight = pow((pow((double)(dest_line_length), p) / (a + d)), b);
+
+					tx += (xp - x) * weight;
+					ty += (yp - y) * weight;
+					tx2 += (xp2 - x) * weight;
+					ty2 += (yp2 - y) * weight;
+					totalWeight += weight;
+				}
+				source_x = x + (int)(tx / totalWeight + 0.5);
+				source_y = y + (int)(ty / totalWeight + 0.5);
+
+				source_x2 = x + (int)(tx2 / totalWeight + 0.5);
+				source_y2 = y + (int)(ty2 / totalWeight + 0.5);
+
+				if (source_x < 0) source_x = 0;
+				if (source_x > last_col) source_x = last_col;
+				if (source_y < 0) source_y = 0;
+				if (source_y > last_row) source_y = last_row;
+				if (source_x2 < 0) source_x2 = 0;
+				if (source_x2 > last_col) source_x2 = last_col;
+				if (source_y2 < 0) source_y2 = 0;
+				if (source_y2 > last_row) source_y2 = last_row;
+				warped_img[y][x] = input_img[source_y][source_x];
+				warped_img2[y][x] = compare_img[source_y2][source_x2];
+			}
+		}
+		// 모핑 결과 합병
+		for (int y = 0; y < imageHeight; y++)
+			for (int x = 0; x < imageWidth; x++) {
+				int val = (int)((1.0 - fweight) * warped_img[y][x] +
+					fweight * warped_img2[y][x]);
+				if (val < 0) val = 0;
+				if (val > 255) val = 255;
+				morphed_img[frame - 1][y][x] = val;
+			}
+	}
+}
+
+void CImageProGyuTaeAhnDoc::GeometryMorphingNormal() {
+	control_line source_lines[23] =
+		{ {116,7,207,5},{34,109,90,21},{30,128,55,249},{65,261,118,320},
+		{123,321,171,321},{179,319,240,264},{247,251,282,135},{228,8,281,114},
+		{78,106,123,109},{187,115,235,114},{72,142,99,128},{74,150,122,154},
+		{108,127,123,146},{182,152,213,132},{183,159,229,157},{219,131,240,154},
+		{80,246,117,212},{127,222,146,223},{154,227,174,221},{183,213,228,252,},
+		{114,255,186,257},{109,258,143,277},{152,278,190,262} };
+	control_line dest_lines[23] =
+		{ {120,8,200,6},{12,93,96,16},{16,110,74,271},{96,290,126,336},
+		{142,337,181,335},{192,335,232,280},{244,259,288,108},{212,13,285,92},
+		{96,135,136,118},{194,119,223,125},{105,145,124,134},{110,146,138,151},
+		{131,133,139,146},{188,146,198,134},{189,153,218,146},{204,133,221,140},
+		{91,268,122,202},{149,206,159,209},{170,209,181,204},{208,199,235,265},
+		{121,280,205,284},{112,286,160,301},{166,301,214,287} };
+
+	GeometryMorphing(source_lines, dest_lines, 23);
+}
+
+void CImageProGyuTaeAhnDoc::GeometryMorphingMyImg() {
+	control_line source_lines[23] = {
+		{87, 75, 229, 70}, {63, 204, 80, 81}, {63, 206, 97, 289}, {106, 290, 137, 297},
+		{147, 299, 197, 243}, {207, 292, 236, 277}, {241, 271, 263, 209}, { 244, 87, 265, 201 },
+		{90, 141, 136, 136}, {187, 132, 229, 137}, {100, 166, 126, 153}, {102, 171, 134, 171},
+		{130, 235, 140, 171}, {186, 160, 201, 152}, {187, 166, 224, 163}, {205, 154, 224, 160},
+		{114, 269, 143, 209}, {143, 216, 160, 212}, {173, 210, 183, 213}, {192, 203, 206, 225},
+		{139, 245, 205, 239}, {137, 253, 170, 259}, {175, 258, 206, 245} };
+
+	control_line dest_lines[23] =
+	{ {120,8,200,6},{12,93,96,16},{16,110,74,271},{96,290,126,336},
+	{142,337,181,335},{192,335,232,280},{244,259,288,108},{212,13,285,92},
+	{96,135,136,118},{194,119,223,125},{105,145,124,134},{110,146,138,151},
+	{131,133,139,146},{188,146,198,134},{189,153,218,146},{204,133,221,140},
+	{91,268,122,202},{149,206,159,209},{170,209,181,204},{208,199,235,265},
+	{121,280,205,284},{112,286,160,301},{166,301,214,287} };
+
+	GeometryMorphing(source_lines, dest_lines, 23);
+}

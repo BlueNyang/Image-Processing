@@ -15,8 +15,9 @@ protected: // create from serialization only
 
 // Attributes
 public:
-	int viewMode;
 	CImageProGyuTaeAhnDoc* GetDocument() const;
+	int viewMode;
+	char AVIFileName[256];
 
 // Operations
 public:
@@ -48,6 +49,7 @@ protected:
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	DECLARE_MESSAGE_MAP()
 public:
+	void LoadAVIFile(CDC* pDC);
 	afx_msg void OnPixelAdd();
 	afx_msg void OnPixelSub();
 	afx_msg void OnPixelMul();
@@ -86,6 +88,11 @@ public:
 	afx_msg void OnGeometryRotate();
 	afx_msg void OnGeometryVerticalFlip();
 	afx_msg void OnGeometryHorizontalFlip();
+	afx_msg void OnGeometryWarping();
+	afx_msg void OnGeometryMorphing();
+	afx_msg void OnGeometryMyWarping();
+	afx_msg void OnGeometryWarpingSmile();
+	afx_msg void OnAviView();
 };
 
 #ifndef _DEBUG  // debug version in ImagePro_GyuTae_AhnView.cpp
