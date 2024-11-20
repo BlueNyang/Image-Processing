@@ -63,6 +63,7 @@ public:
 	afx_msg void OnPixelAdd2Images();
 	afx_msg void OnPixelSub2Images();
 	afx_msg void OnPixelDetection();
+
 	afx_msg void OnRegionSharpening();
 	afx_msg void OnRegionBlurring();
 	afx_msg void OnRegionSobel();
@@ -70,6 +71,7 @@ public:
 	afx_msg void OnRegionRobert();
 	afx_msg void OnRegionPrewitt();
 	afx_msg void OnRegionEmbossing();
+
 	afx_msg void OnErosion(unsigned char background);
 	afx_msg void OnErosion0();
 	afx_msg void OnErosion255();
@@ -83,6 +85,7 @@ public:
 	afx_msg void OnClosing0();
 	afx_msg void OnClosing255();
 	afx_msg void OnCountCell();
+
 	afx_msg void OnGeometryZoominPixelCopy();
 	afx_msg void OnGeometryZoominInterpolation();
 	afx_msg void OnGeometryZoomoutSubsampling();
@@ -94,12 +97,20 @@ public:
 	afx_msg void OnGeometryMorphing();
 	afx_msg void OnGeometryMyWarping();
 	afx_msg void OnGeometryWarpingSmile();
+
 	afx_msg void OnAviView();
 	afx_msg void OnCameraView();
+
 	afx_msg void OnVideoSharpening();
-	afx_msg void OnVideoSubtract();
 	afx_msg void OnVideoBlurring();
+	afx_msg void OnVideoSobel();
 	afx_msg void OnVideoInvert();
+
+	afx_msg void OnCameraSharpening();
+	afx_msg void OnCameraBlurring();
+	afx_msg void OnCameraSobel();
+	afx_msg void OnCameraSubtract();
+	afx_msg void OnCameraInvert();
 };
 
 #ifndef _DEBUG  // debug version in ImagePro_GyuTae_AhnView.cpp

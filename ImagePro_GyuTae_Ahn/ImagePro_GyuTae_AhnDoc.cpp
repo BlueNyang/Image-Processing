@@ -330,6 +330,7 @@ void CImageProGyuTaeAhnDoc::PixelAdd()
 {
 	if(console_output) std::cout << "[pDoc] PixelAdd" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	if(console_output) std::cout << " >[PixelAdd] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	int value = 0;
 
@@ -347,6 +348,7 @@ void CImageProGyuTaeAhnDoc::PixelSub()
 {
 	if(console_output) std::cout << "[pDoc] PixelSub" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	if(console_output) std::cout << " >[PixelSub] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	int value = 0;
 
@@ -364,6 +366,7 @@ void CImageProGyuTaeAhnDoc::PixelMul()
 {
 	if(console_output) std::cout << "[pDoc] PixelMul" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	if(console_output) std::cout << " >[PixelMul] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	float value = 0;
 
@@ -381,6 +384,7 @@ void CImageProGyuTaeAhnDoc::PixelDiv()
 {
 	if(console_output) std::cout << "[pDoc] PixelDiv" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	if(console_output) std::cout << " >[PixelDiv] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	for (int y = 0; y < imageHeight; y++) {
 		for (int x = 0; x < imageWidth * depth; x++) {
@@ -393,6 +397,7 @@ void CImageProGyuTaeAhnDoc::PixelDiv()
 void CImageProGyuTaeAhnDoc::PixelHistoEQ() {
 	if(console_output) std::cout << "[pDoc] PixelHistoEQ" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	if(console_output) std::cout << " >[PixelHistoEQ] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
 	float N = (float)(imageHeight * imageWidth);
@@ -428,6 +433,7 @@ void CImageProGyuTaeAhnDoc::PixelHistoEQ() {
 void CImageProGyuTaeAhnDoc::PixelContrast() {
 	if(console_output) std::cout << "[pDoc] PixelContrast" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	if(console_output) std::cout << " >[PixelContrast] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	float max = 0, min = 255;
 
@@ -475,6 +481,7 @@ void CImageProGyuTaeAhnDoc::PixelContrast() {
 void CImageProGyuTaeAhnDoc::PixelBinarization(int threshold) {
 	if(console_output) std::cout << "[pDoc] PixelBinarization" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	if(console_output) std::cout << " >[PixelBinarization] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	if(console_output) std::cout << " >[PixelBinarization] threshold: " << threshold << std::endl;
 
@@ -512,6 +519,7 @@ void CImageProGyuTaeAhnDoc::PixelBinarization(int threshold) {
 void CImageProGyuTaeAhnDoc::PixelInvert() {
 	if(console_output) std::cout << "[pDoc] PixelInvert" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	if(console_output) std::cout << " >[PixelInvert] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
 	for (int y = 0; y < imageHeight; y++) {
@@ -526,6 +534,7 @@ void CImageProGyuTaeAhnDoc::PixelAdd2Images() {
 	if(console_output) std::cout << "[pDoc] PixelAdd2Images" << std::endl;
 	int value = 0;
 	Load2Images();
+	if (input_img == NULL || compare_img == NULL) return;
 	if(console_output) std::cout << " >[PixelAdd2Images] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
 	if(console_output) std::cout << " >[PixelAdd2Images] Calculating" << std::endl;
@@ -543,6 +552,7 @@ void CImageProGyuTaeAhnDoc::PixelSub2Images() {
 	if(console_output) std::cout << "[pDoc] PixelSub2Images" << std::endl;
 	int value = 0;
 	Load2Images();
+	if (input_img == NULL || compare_img == NULL) return;
 	if(console_output) std::cout << " >[PixelSub2Images] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
 	if(console_output) std::cout << " >[PixelSub2Images] Calculating" << std::endl;
@@ -560,6 +570,7 @@ void CImageProGyuTaeAhnDoc::PixelDetection2Images() {
 	if(console_output) std::cout << "[pDoc] PixelDetection2Images" << std::endl;
 	int value = 0;
 	Load2Images();
+	if (input_img == NULL || compare_img == NULL) return;
 	if(console_output) std::cout << " >[PixelDetection2Images] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
 	if(console_output) std::cout << " >[PixelDetection2Images] Calculating" << std::endl;
@@ -573,7 +584,8 @@ void CImageProGyuTaeAhnDoc::PixelDetection2Images() {
 	if(console_output) std::cout << " >[PixelDetection2Images] Done" << std::endl;
 }
 
-void CImageProGyuTaeAhnDoc::Convolve(unsigned char** input_img, unsigned char** output_img, int cols, int rows, float mask[][3], int bias, int depth) {
+void CImageProGyuTaeAhnDoc::Convolve(unsigned char** input_img, unsigned char** output_img, int cols, int rows, float mask[][3], int bias, int depth)
+{
 	if(console_output) std::cout << "[pDoc] Convolve" << std::endl;
 
 	if(console_output) std::cout << " >[Convolve] malloc temp_img" << std::endl;
@@ -642,6 +654,8 @@ void CImageProGyuTaeAhnDoc::Convolve(unsigned char** input_img, unsigned char** 
 			}
 	}
 
+
+
 	if(console_output) std::cout << " >[Convolve] releasing temp_img memory..." << std::endl;
 	for(int i = 0; i < imageHeight + 2; i++) 
 	{
@@ -652,9 +666,92 @@ void CImageProGyuTaeAhnDoc::Convolve(unsigned char** input_img, unsigned char** 
 	if(console_output) std::cout << " >[Convolve] Done" << std::endl;
 }
 
+void CImageProGyuTaeAhnDoc::Convolve(unsigned char** input_img, unsigned char** output_img, int cols, int rows, float mask[][5], int bias, int depth)
+{
+	if (console_output) std::cout << "[pDoc] Convolve" << std::endl;
+
+	if (console_output) std::cout << " >[Convolve] malloc temp_img" << std::endl;
+	unsigned char** temp_img = (unsigned char**)malloc((imageHeight + 4) * sizeof(unsigned char*));
+
+	if (console_output) std::cout << " >[Convolve] calloc temp_img[i]" << std::endl;
+	for (int i = 0; i < imageHeight + 4; i++)
+		temp_img[i] = (unsigned char*)calloc(depth, (imageWidth + 4));
+
+	if (console_output) std::cout << " >[Convolve] Copying input_img to temp_img" << std::endl;
+	for (int y = 2; y < imageHeight + 2; y++)
+	{
+		for (int x = 2; x < imageWidth + 2; x++)
+		{
+			if (depth == 1) temp_img[y][x] = input_img[y - 2][x - 2];
+			else if (depth == 3) {
+				temp_img[y][3 * x] = input_img[y - 2][3 * (x - 2)];
+				temp_img[y][3 * x + 1] = input_img[y - 2][3 * (x - 2) + 1];
+				temp_img[y][3 * x + 2] = input_img[y - 2][3 * (x - 2) + 2];
+			}
+		}
+	}
+
+	if (console_output) std::cout << " >[Convolve] Convolution..." << std::endl;
+	if (depth == 1) {
+		if (console_output) std::cout << " >[Convolve] Depth 1" << std::endl;
+		int sum = 0;
+		for (int y = 0; y < imageHeight; y++)
+			for (int x = 0; x < imageWidth; x++) {
+				sum = 0;
+				for (int i = 0; i < 5; i++) for (int j = 0; j < 5; j++)
+					sum += (int)(temp_img[y + i][x + j] * mask[i][j]);
+				sum += bias;
+
+				if (sum > 255) output_img[y][x] = 255;
+				else if (sum < 0) output_img[y][x] = 0;
+				else output_img[y][x] = (unsigned char)sum;
+			}
+	}
+	else if (depth == 3) {
+		if (console_output) std::cout << " >[Convolve] Depth 3" << std::endl;
+		int r, g, b;
+		for (int y = 0; y < imageHeight; y++)
+			for (int x = 0; x < imageWidth; x++) {
+				r = 0, g = 0, b = 0;
+				for (int i = 0; i < 5; i++) for (int j = 0; j < 5; j++) {
+					r += (int)(temp_img[y + i][3 * (x + j)] * mask[i][j]);
+					g += (int)(temp_img[y + i][3 * (x + j) + 1] * mask[i][j]);
+					b += (int)(temp_img[y + i][3 * (x + j) + 2] * mask[i][j]);
+				}
+				r += bias;
+				g += bias;
+				b += bias;
+
+				if (r > 255) output_img[y][3 * x] = 255;
+				else if (r < 0) output_img[y][3 * x] = 0;
+				else output_img[y][3 * x] = (unsigned char)r;
+
+				if (g > 255) output_img[y][3 * x + 1] = 255;
+				else if (g < 0) output_img[y][3 * x + 1] = 0;
+				else output_img[y][3 * x + 1] = (unsigned char)g;
+
+				if (b > 255) output_img[y][3 * x + 2] = 255;
+				else if (b < 0) output_img[y][3 * x + 2] = 0;
+				else output_img[y][3 * x + 2] = (unsigned char)b;
+			}
+	}
+
+
+
+	if (console_output) std::cout << " >[Convolve] releasing temp_img memory..." << std::endl;
+	for (int i = 0; i < imageHeight + 2; i++)
+	{
+		free(temp_img[i]);
+	}
+	free(temp_img);
+
+	if (console_output) std::cout << " >[Convolve] Done" << std::endl;
+}
+
 void CImageProGyuTaeAhnDoc::RegionSharpening() {
 	if(console_output) std::cout << "[pDoc] PixelRegionSharpening" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	if(console_output) std::cout << " >[PixelRegionSharpening] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	float kernel[3][3] = {
 		{0, -1, 0},
@@ -717,11 +814,14 @@ void CImageProGyuTaeAhnDoc::RegionSharpening() {
 void CImageProGyuTaeAhnDoc::RegionBlurring() {
 	if(console_output) std::cout << "[pDoc] PixelRegionBlurring" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	if(console_output) std::cout << " >[PixelRegionBlurring] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
-	float kernel[3][3] = {
-		{1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0},
-		{1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0},
-		{1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0}
+	float kernel[5][5] = {
+		{1.0 / 25.0, 1.0 / 25.0, 1.0 / 25.0, 1.0 / 25.0, 1.0 / 25.0},
+		{1.0 / 25.0, 1.0 / 25.0, 1.0 / 25.0, 1.0 / 25.0, 1.0 / 25.0},
+		{1.0 / 25.0, 1.0 / 25.0, 1.0 / 25.0, 1.0 / 25.0, 1.0 / 25.0},
+		{1.0 / 25.0, 1.0 / 25.0, 1.0 / 25.0, 1.0 / 25.0, 1.0 / 25.0},
+		{1.0 / 25.0, 1.0 / 25.0, 1.0 / 25.0, 1.0 / 25.0, 1.0 / 25.0},
 	};
 	
 	if (depth == 1) {
@@ -779,6 +879,7 @@ void CImageProGyuTaeAhnDoc::RegionBlurring() {
 void CImageProGyuTaeAhnDoc::RegionSobel() {
 	if(console_output) std::cout << "[pDoc] PixelRegionSobel" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	if(console_output) std::cout << " >[PixelRegionSobel] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	float mask1[3][3] = {
 		{-1, -2, -1},
@@ -796,8 +897,8 @@ void CImageProGyuTaeAhnDoc::RegionSobel() {
 	unsigned char** Ec = (unsigned char**)malloc(sizeof(unsigned char*) * imageHeight);
 
 	for (int i = 0; i < imageHeight; i++) {
-		Er[i] = (unsigned char*)malloc(sizeof(unsigned char) * imageWidth);
-		Ec[i] = (unsigned char*)malloc(sizeof(unsigned char) * imageWidth);
+		Er[i] = (unsigned char*)malloc(sizeof(unsigned char) * imageWidth * depth);
+		Ec[i] = (unsigned char*)malloc(sizeof(unsigned char) * imageWidth * depth);
 	}
 
 	if(console_output) std::cout << " >[PixelRegionSobel] Convolve Er, Ec" << std::endl;
@@ -805,11 +906,31 @@ void CImageProGyuTaeAhnDoc::RegionSobel() {
 	Convolve(input_img, Ec, imageWidth, imageHeight, mask2, 0, depth);
 
 	if(console_output) std::cout << " >[PixelRegionSobel] Calculating output_img" << std::endl;
-	for (int y = 0; y < imageHeight; y++) {
-		for (int x = 0; x < imageWidth; x++) {
-			output_img[y][x] = (int)sqrt((float)(Er[y][x] * Er[y][x] + Ec[y][x] * Ec[y][x]));
-			if (output_img[y][x] > 255) output_img[y][x] = 255;
-			else if (output_img[y][x] < 0) output_img[y][x] = 0;
+	if (depth == 1)
+	{
+		if (console_output) std::cout << " >[PixelRegionSobel] Depth 1" << std::endl;
+		for (int y = 0; y < imageHeight; y++) {
+			for (int x = 0; x < imageWidth; x++) {
+				output_img[y][x] = (int)sqrt((float)(Er[y][x] * Er[y][x] + Ec[y][x] * Ec[y][x]));
+				if (output_img[y][x] > 255) output_img[y][x] = 255;
+				else if (output_img[y][x] < 0) output_img[y][x] = 0;
+			}
+		}
+	}
+	else if (depth == 3) {
+		if (console_output) std::cout << " >[PixelRegionSobel] Depth 3" << std::endl;
+		for (int y = 0; y < imageHeight; y++) {
+			for (int x = 0; x < imageWidth; x++) {
+				int value = 0;
+				value += (int)sqrt((float)(Er[y][3 * x] * Er[y][3 * x] + Ec[y][3 * x] * Ec[y][3 * x]));
+				value += (int)sqrt((float)(Er[y][3 * x + 1] * Er[y][3 * x + 1] + Ec[y][3 * x + 1] * Ec[y][3 * x + 1]));
+				value += (int)sqrt((float)(Er[y][3 * x + 2] * Er[y][3 * x + 2] + Ec[y][3 * x + 2] * Ec[y][3 * x + 2]));
+				value /= 3;
+
+				if (value > 255) output_img[y][3 * x] = output_img[y][3 * x + 1] = output_img[y][3 * x + 2] = 255;
+				else if (value < 0) output_img[y][3 * x] = output_img[y][3 * x + 1] = output_img[y][3 * x + 2] = 0;
+				else output_img[y][3 * x] = output_img[y][3 * x + 1] = output_img[y][3 * x + 2] = value;
+			}
 		}
 	}
 	if(console_output) std::cout << " >[PixelRegionSobel] Done" << std::endl;
@@ -818,6 +939,7 @@ void CImageProGyuTaeAhnDoc::RegionSobel() {
 void CImageProGyuTaeAhnDoc::RegionPrewitt() {
 	if(console_output) std::cout << "[pDoc] PixelRegionPrewitt" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	if(console_output) std::cout << " >[PixelRegionPrewitt] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	float mask1[3][3] = {
 		{-1, -1, -1},
@@ -835,8 +957,8 @@ void CImageProGyuTaeAhnDoc::RegionPrewitt() {
 	unsigned char** Ec = (unsigned char**)malloc(sizeof(unsigned char*) * imageHeight);
 
 	for (int i = 0; i < imageHeight; i++) {
-		Er[i] = (unsigned char*)malloc(sizeof(unsigned char) * imageWidth);
-		Ec[i] = (unsigned char*)malloc(sizeof(unsigned char) * imageWidth);
+		Er[i] = (unsigned char*)malloc(sizeof(unsigned char) * imageWidth * depth);
+		Ec[i] = (unsigned char*)malloc(sizeof(unsigned char) * imageWidth * depth);
 	}
 
 	if(console_output) std::cout << " >[PixelRegionPrewitt] Convolve Er, Ec" << std::endl;
@@ -844,11 +966,31 @@ void CImageProGyuTaeAhnDoc::RegionPrewitt() {
 	Convolve(input_img, Ec, imageWidth, imageHeight, mask2, 0, depth);
 
 	if(console_output) std::cout << " >[PixelRegionPrewitt] Calculating output_img" << std::endl;
-	for (int y = 0; y < imageHeight; y++) {
-		for (int x = 0; x < imageWidth; x++) {
-			output_img[y][x] = (int)sqrt((float)(Er[y][x] * Er[y][x] + Ec[y][x] * Ec[y][x]));
-			if (output_img[y][x] > 255) output_img[y][x] = 255;
-			else if (output_img[y][x] < 0) output_img[y][x] = 0;
+	if (depth == 1)
+	{
+		if (console_output) std::cout << " >[PixelRegionPrewitt] Depth 1" << std::endl;
+		for (int y = 0; y < imageHeight; y++) {
+			for (int x = 0; x < imageWidth; x++) {
+				output_img[y][x] = (int)sqrt((float)(Er[y][x] * Er[y][x] + Ec[y][x] * Ec[y][x]));
+				if (output_img[y][x] > 255) output_img[y][x] = 255;
+				else if (output_img[y][x] < 0) output_img[y][x] = 0;
+			}
+		}
+	}
+	else if (depth == 3) {
+		if (console_output) std::cout << " >[PixelRegionPrewitt] Depth 3" << std::endl;
+		for (int y = 0; y < imageHeight; y++) {
+			for (int x = 0; x < imageWidth; x++) {
+				int value = 0;
+				value += (int)sqrt((float)(Er[y][3 * x] * Er[y][3 * x] + Ec[y][3 * x] * Ec[y][3 * x]));
+				value += (int)sqrt((float)(Er[y][3 * x + 1] * Er[y][3 * x + 1] + Ec[y][3 * x + 1] * Ec[y][3 * x + 1]));
+				value += (int)sqrt((float)(Er[y][3 * x + 2] * Er[y][3 * x + 2] + Ec[y][3 * x + 2] * Ec[y][3 * x + 2]));
+				value /= 3;
+
+				if (value > 255) output_img[y][3 * x] = output_img[y][3 * x + 1] = output_img[y][3 * x + 2] = 255;
+				else if (value < 0) output_img[y][3 * x] = output_img[y][3 * x + 1] = output_img[y][3 * x + 2] = 0;
+				else output_img[y][3 * x] = output_img[y][3 * x + 1] = output_img[y][3 * x + 2] = value;
+			}
 		}
 	}
 	if(console_output) std::cout << " >[PixelRegionPrewitt] Done" << std::endl;
@@ -857,6 +999,7 @@ void CImageProGyuTaeAhnDoc::RegionPrewitt() {
 void CImageProGyuTaeAhnDoc::RegionRobert() {
 	if(console_output) std::cout << "[pDoc] PixelRegionRobert" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	if(console_output) std::cout << " >[PixelRegionRobert] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	float mask1[3][3] = {
 		{-1, 0, 0},
@@ -883,11 +1026,31 @@ void CImageProGyuTaeAhnDoc::RegionRobert() {
 	Convolve(input_img, Ec, imageWidth, imageHeight, mask2, 0, depth);
 
 	if(console_output) std::cout << " >[PixelRegionRobert] Calculating output_img" << std::endl;
-	for (int y = 0; y < imageHeight; y++) {
-		for (int x = 0; x < imageWidth; x++) {
-			output_img[y][x] = (int)sqrt((float)(Er[y][x] * Er[y][x] + Ec[y][x] * Ec[y][x]));
-			if (output_img[y][x] > 255) output_img[y][x] = 255;
-			else if (output_img[y][x] < 0) output_img[y][x] = 0;
+	if (depth == 1)
+	{
+		if (console_output) std::cout << " >[PixelRegionRobert] Depth 1" << std::endl;
+		for (int y = 0; y < imageHeight; y++) {
+			for (int x = 0; x < imageWidth; x++) {
+				output_img[y][x] = (int)sqrt((float)(Er[y][x] * Er[y][x] + Ec[y][x] * Ec[y][x]));
+				if (output_img[y][x] > 255) output_img[y][x] = 255;
+				else if (output_img[y][x] < 0) output_img[y][x] = 0;
+			}
+		}
+	}
+	else if (depth == 3) {
+		if (console_output) std::cout << " >[PixelRegionRobert] Depth 3" << std::endl;
+		for (int y = 0; y < imageHeight; y++) {
+			for (int x = 0; x < imageWidth; x++) {
+				int value = 0;
+				value += (int)sqrt((float)(Er[y][3 * x] * Er[y][3 * x] + Ec[y][3 * x] * Ec[y][3 * x]));
+				value += (int)sqrt((float)(Er[y][3 * x + 1] * Er[y][3 * x + 1] + Ec[y][3 * x + 1] * Ec[y][3 * x + 1]));
+				value += (int)sqrt((float)(Er[y][3 * x + 2] * Er[y][3 * x + 2] + Ec[y][3 * x + 2] * Ec[y][3 * x + 2]));
+				value /= 3;
+
+				if (value > 255) output_img[y][3 * x] = output_img[y][3 * x + 1] = output_img[y][3 * x + 2] = 255;
+				else if (value < 0) output_img[y][3 * x] = output_img[y][3 * x + 1] = output_img[y][3 * x + 2] = 0;
+				else output_img[y][3 * x] = output_img[y][3 * x + 1] = output_img[y][3 * x + 2] = value;
+			}
 		}
 	}
 	if(console_output) std::cout << " >[PixelRegionRobert] Done" << std::endl;
@@ -896,6 +1059,7 @@ void CImageProGyuTaeAhnDoc::RegionRobert() {
 void CImageProGyuTaeAhnDoc::RegionMedianFilter() {
 	if(console_output) std::cout << "[pDoc] PixelRegionMedianFilter" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	if(console_output) std::cout << " >[PixelRegionMedianFilter] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
 	if (depth == 1) {
@@ -975,6 +1139,7 @@ void CImageProGyuTaeAhnDoc::RegionEmbossing() {
 	if(console_output) std::cout << "[pDoc] PixelRegionEmbossing" << std::endl;
 
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	if(console_output) std::cout << " >[PixelRegionEmbossing] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
 	float mask[3][3] = {
@@ -1077,6 +1242,7 @@ void CImageProGyuTaeAhnDoc::Find_Connected_Region(int y, int x, int** label, int
 void CImageProGyuTaeAhnDoc::Min_Value_Filter(unsigned char background) {
 	if(console_output) std::cout << "[pDoc] Erosion" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	
 	if(console_output) std::cout << " >[Erosion] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
@@ -1109,6 +1275,7 @@ void CImageProGyuTaeAhnDoc::Min_Value_Filter(unsigned char background) {
 void CImageProGyuTaeAhnDoc::Max_Value_Filter(unsigned char background) {
 	if(console_output) std::cout << "[pDoc] Dilation" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	
 	if(console_output) std::cout << " >[Dilation] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 	
@@ -1141,6 +1308,7 @@ void CImageProGyuTaeAhnDoc::Max_Value_Filter(unsigned char background) {
 void CImageProGyuTaeAhnDoc::Opening(unsigned char background) {
 	if(console_output) std::cout << "[pDoc] Opening" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	
 	if(console_output) std::cout << " >[Opening] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
@@ -1160,6 +1328,7 @@ void CImageProGyuTaeAhnDoc::Opening(unsigned char background) {
 void CImageProGyuTaeAhnDoc::Closing(unsigned char background) {
 	if(console_output) std::cout << "[pDoc] Closing" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	
 	if(console_output) std::cout << " >[Closing] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
@@ -1179,6 +1348,7 @@ void CImageProGyuTaeAhnDoc::Closing(unsigned char background) {
 void CImageProGyuTaeAhnDoc::CountCell() {
 	if(console_output) std::cout << "[pDoc] CountCell" << std::endl;
 	Load1Image();
+	if (input_img == NULL) return;
 	
 	if(console_output) std::cout << " >[CountCell] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
@@ -1229,6 +1399,7 @@ void CImageProGyuTaeAhnDoc::CountCell() {
 void CImageProGyuTaeAhnDoc::GeometryZoominPixelCopy() {
 	if(console_output) std::cout << "[pDoc] GeometryZoominPixelCopy" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 	
 	if(console_output) std::cout << " >[GeometryZoominPixelCopy] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
@@ -1264,6 +1435,7 @@ void CImageProGyuTaeAhnDoc::GeometryZoominPixelCopy() {
 void CImageProGyuTaeAhnDoc::GeometryZoominInterpolation() {
 	if(console_output) std::cout << "[pDoc] GeometryZoominInterpolation" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 
 	if(console_output) std::cout << " >[GeometryZoominInterpolation] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
@@ -1338,6 +1510,7 @@ void CImageProGyuTaeAhnDoc::GeometryZoominInterpolation() {
 void CImageProGyuTaeAhnDoc::GeometryZoomoutSubsampling() {
 	if(console_output) std::cout << "[pDoc] GeometryZoomoutSubsampling" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 
 	if(console_output) std::cout << " >[GeometryZoomoutSubsampling] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
@@ -1375,6 +1548,7 @@ void CImageProGyuTaeAhnDoc::GeometryZoomoutSubsampling() {
 void CImageProGyuTaeAhnDoc::GeometryZoomoutAverage() {
 	if(console_output) std::cout << "[pDoc] GeometryZoomoutAverage" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 
 	if(console_output) std::cout << " >[GeometryZoomoutAverage] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
@@ -1433,6 +1607,7 @@ void CImageProGyuTaeAhnDoc::GeometryZoomoutAverage() {
 void  CImageProGyuTaeAhnDoc::GeometryRotate() {
 	if(console_output) std::cout << "[pDoc] GeometryRotate" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 
 	if(console_output) std::cout << " >[GeometryRotate] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
@@ -1498,6 +1673,7 @@ void  CImageProGyuTaeAhnDoc::GeometryRotate() {
 void CImageProGyuTaeAhnDoc::GeometryVerticalFlip() {
 	if(console_output) std::cout << "[pDoc] GeometryVerticalFlip" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 
 	if(console_output) std::cout << " >[GeometryVerticalFlip] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
@@ -1530,6 +1706,7 @@ void CImageProGyuTaeAhnDoc::GeometryVerticalFlip() {
 void CImageProGyuTaeAhnDoc::GeometryHorizontalFlip() {
 	if(console_output) std::cout << "[pDoc] GeometryHorizontalFlip" << std::endl;
 	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
 
 	if(console_output) std::cout << " >[GeometryHorizontalFlip] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
@@ -1562,6 +1739,7 @@ void CImageProGyuTaeAhnDoc::GeometryHorizontalFlip() {
 void CImageProGyuTaeAhnDoc::GeometryWarping(control_line source_lines[], control_line dest_lines[], int control_line_num) {
 	if(console_output) std::cout << "[pDoc] GeometryMorphing" << std::endl;
 	Load1Image();
+	if (input_img == NULL) return;
 
 	if(console_output) std::cout << " >[GeometryMorphing] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
@@ -1680,6 +1858,7 @@ void CImageProGyuTaeAhnDoc::GeometryMyImageWarping_Smile() {
 void CImageProGyuTaeAhnDoc::GeometryMorphing(control_line source_lines[], control_line dest_lines[], int control_line_num) {
 	if(console_output) std::cout << "[pDoc] GeometryMorphing" << std::endl;
 	Load2Images();
+	if (input_img == NULL || compare_img == NULL) return;
 
 	if(console_output) std::cout << " >[GeometryMorphing] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 

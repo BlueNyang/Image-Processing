@@ -124,13 +124,22 @@
 #define ID_VIDEO_SOBEL                  32862
 #define ID_VIDEO_INVERT                 32863
 #define ID_VIDEO_BLURRING               32864
+#define ID_VIDEOPROCESSING_VIDEOPROCESSING 32865
+#define ID_AVI_PROCESSING               32866
+#define ID_VIDEOPROCESSING_CAMERAPROCESSING32867 32867
+#define ID_VIDEO_SHARPING               32868
+#define ID_AVIPROCESSING_VIDEO          32869
+#define ID_CAMERA_BLURRING              32870
+#define ID_CAMERA_SOBEL                 32871
+#define ID_CAMERAPROCESSING_CAMERASUBTRACT 32872
+#define ID_CAMERA_INVERT                32873
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        310
-#define _APS_NEXT_COMMAND_VALUE         32865
+#define _APS_NEXT_COMMAND_VALUE         32874
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

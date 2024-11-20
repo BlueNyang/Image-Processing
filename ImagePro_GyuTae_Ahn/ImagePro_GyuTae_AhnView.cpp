@@ -35,9 +35,10 @@
 
 #define NO_OPERATION 0
 #define SHARPENING 1
-#define SUBTRACT 2
-#define BLURRING 3
-#define INVERT 4
+#define BLURRING 2
+#define SOBEL 3
+#define SUBTRACT 4
+#define INVERT 5
 
 #define CLIP(x) (((x) < 0) ? 0 : (((x) > 255) ? 255 : (x)))
 
@@ -93,9 +94,15 @@ BEGIN_MESSAGE_MAP(CImageProGyuTaeAhnView, CScrollView)
 	ON_COMMAND(ID_AVI_VIEW, &CImageProGyuTaeAhnView::OnAviView)
 	ON_COMMAND(ID_CAMERA_VIEW, &CImageProGyuTaeAhnView::OnCameraView)
 	ON_COMMAND(ID_VIDEO_SHARPENING, &CImageProGyuTaeAhnView::OnVideoSharpening)
-	ON_COMMAND(ID_VIDEO_SUBTRACT, &CImageProGyuTaeAhnView::OnVideoSubtract)
 	ON_COMMAND(ID_VIDEO_BLURRING, &CImageProGyuTaeAhnView::OnVideoBlurring)
+	ON_COMMAND(ID_VIDEO_SOBEL, &CImageProGyuTaeAhnView::OnVideoSobel)
 	ON_COMMAND(ID_VIDEO_INVERT, &CImageProGyuTaeAhnView::OnVideoInvert)
+	ON_COMMAND(ID_CAMERA_SHARPENING, &CImageProGyuTaeAhnView::OnCameraSharpening)
+	ON_COMMAND(ID_CAMERA_BLURRING, &CImageProGyuTaeAhnView::OnCameraBlurring)
+	ON_COMMAND(ID_CAMERA_SOBEL, &CImageProGyuTaeAhnView::OnCameraSobel)
+	ON_COMMAND(ID_CAMERA_SUBTRACT, &CImageProGyuTaeAhnView::OnCameraSubtract)
+	ON_COMMAND(ID_CAMERA_INVERT, &CImageProGyuTaeAhnView::OnCameraInvert)
+
 END_MESSAGE_MAP()
 
 // CImageProGyuTaeAhnView construction/destruction
@@ -273,7 +280,7 @@ void CImageProGyuTaeAhnView::LoadAVIFile(CDC* pDC) {
 
 				image = (unsigned char*)((LPSTR)pbmih + (WORD)pbmih->biSize);
 
-				if (operation != NO_OPERATION) {
+				if (operation == SHARPENING || operation == BLURRING || operation == SOBEL || operation == INVERT) {
 					CImageProGyuTaeAhnDoc* pDoc = GetDocument();
 					ASSERT_VALID(pDoc);
 
@@ -304,7 +311,12 @@ void CImageProGyuTaeAhnView::LoadAVIFile(CDC* pDC) {
 					if (operation == SHARPENING)
 						pDoc->RegionSharpening();
 					else if (operation == BLURRING)
+					{
 						pDoc->RegionBlurring();
+					}
+
+					else if (operation == SOBEL)
+						pDoc->RegionSobel();
 					else if (operation == INVERT)
 						pDoc->PixelInvert();
 
@@ -316,7 +328,8 @@ void CImageProGyuTaeAhnView::LoadAVIFile(CDC* pDC) {
 						}
 					}
 
-				}
+				} // if operation is SHARPENING or BLURRING or INVERT
+				
 				for (y = 0; y < fi.dwHeight; y++)
 				{
 					for (x = 0; x < fi.dwWidth; x++)
@@ -324,11 +337,10 @@ void CImageProGyuTaeAhnView::LoadAVIFile(CDC* pDC) {
 						pDC->SetPixel(x, fi.dwHeight - y - 1,
 							RGB(image[(y * fi.dwWidth + x) * 3 + 2], image[(y * fi.dwWidth + x) * 3 + 1], image[(y * fi.dwWidth + x) * 3]));
 					}
-				}
-			} // for frame
-		} // if stream type is video
-	} // for stream
-
+				} // for frame
+			} // if stream type is video
+		} // for stream
+	} // for frame
 	std::cout << " >[LoadAVIFile] Done" << std::endl;
 	std::cout << " >[LoadAVIFile] Frame Close" << std::endl;
 	if (pfrm != 0) AVIStreamGetFrameClose(pfrm);
@@ -339,6 +351,7 @@ void CImageProGyuTaeAhnView::LoadAVIFile(CDC* pDC) {
 	AVIFileExit();
 }
 
+
 void FrameCallbackProc(HWND hWnd, VIDEOHDR* hdr) {
 	if (hWnd && hdr && hdr->lpData) {
 		if (imageProView_obj) {
@@ -348,7 +361,7 @@ void FrameCallbackProc(HWND hWnd, VIDEOHDR* hdr) {
 }
 
 void CImageProGyuTaeAhnView::OnFrame(unsigned char* data) {
-	if (operation == SHARPENING || operation == BLURRING || operation == INVERT) {
+	if (operation == SHARPENING || operation == BLURRING || operation == SOBEL || operation == INVERT) {
 		CImageProGyuTaeAhnDoc* pDoc = GetDocument();
 		ASSERT_VALID(pDoc);
 
@@ -413,6 +426,8 @@ void CImageProGyuTaeAhnView::OnFrame(unsigned char* data) {
 			pDoc->RegionSharpening();
 		else if (operation == BLURRING)
 			pDoc->RegionBlurring();
+		else if (operation == SOBEL)
+			pDoc->RegionSobel();
 		else if (operation == INVERT)
 			pDoc->PixelInvert();
 
@@ -1258,17 +1273,86 @@ void CImageProGyuTaeAhnView::OnCameraView()
 } // OnCameraView
 
 void CImageProGyuTaeAhnView::OnVideoSharpening() {
-	operation = SHARPENING;
-}
+	std::cout << "[pView] OnAviView" << std::endl;
+	CFile file;
+	CFileDialog dlg(TRUE);
 
-void CImageProGyuTaeAhnView::OnVideoSubtract() {
-	operation = SUBTRACT;
+	std::cout << "[pView] Open avi File" << std::endl;
+	if (dlg.DoModal() == IDOK) {
+		strcpy_s(AVIFileName, dlg.GetPathName());
+		std::cout << "[pView] FileName: " << AVIFileName << std::endl;
+		operation = SHARPENING;
+		viewMode = AVI_FILE;
+	}
+	Invalidate(FALSE);
 }
 
 void CImageProGyuTaeAhnView::OnVideoBlurring() {
-	operation = BLURRING;
+	std::cout << "[pView] OnAviView" << std::endl;
+	CFile file;
+	CFileDialog dlg(TRUE);
+
+	std::cout << "[pView] Open avi File" << std::endl;
+	if (dlg.DoModal() == IDOK) {
+		strcpy_s(AVIFileName, dlg.GetPathName());
+		std::cout << "[pView] FileName: " << AVIFileName << std::endl;
+		operation = BLURRING;
+		viewMode = AVI_FILE;
+	}
+	Invalidate(FALSE);
+}
+
+void CImageProGyuTaeAhnView::OnVideoSobel() {
+	std::cout << "[pView] OnAviView" << std::endl;
+	CFile file;
+	CFileDialog dlg(TRUE);
+
+	std::cout << "[pView] Open avi File" << std::endl;
+	if (dlg.DoModal() == IDOK) {
+		strcpy_s(AVIFileName, dlg.GetPathName());
+		std::cout << "[pView] FileName: " << AVIFileName << std::endl;
+		operation = SOBEL;
+		viewMode = AVI_FILE;
+	}
+	Invalidate(FALSE);
 }
 
 void CImageProGyuTaeAhnView::OnVideoInvert() {
+	std::cout << "[pView] OnAviView" << std::endl;
+	CFile file;
+	CFileDialog dlg(TRUE);
+
+	std::cout << "[pView] Open avi File" << std::endl;
+	if (dlg.DoModal() == IDOK) {
+		strcpy_s(AVIFileName, dlg.GetPathName());
+		std::cout << "[pView] FileName: " << AVIFileName << std::endl;
+		operation = INVERT;
+		viewMode = AVI_FILE;
+	}
+	Invalidate(FALSE);
+}
+
+void::CImageProGyuTaeAhnView::OnCameraSharpening() {
+	std::cout << "[pView] OnCameraSharpening" << std::endl;
+	operation = SHARPENING;
+}
+
+void::CImageProGyuTaeAhnView::OnCameraBlurring() {
+	std::cout << "[pView] OnCameraBlurring" << std::endl;
+	operation = BLURRING;
+}
+
+void::CImageProGyuTaeAhnView::OnCameraSobel() {
+	std::cout << "[pView] OnCameraSobel" << std::endl;
+	operation = SOBEL;
+}
+
+void::CImageProGyuTaeAhnView::OnCameraSubtract() {
+	std::cout << "[pView] OnCameraSubtract" << std::endl;
+	operation = SUBTRACT;
+}
+
+void::CImageProGyuTaeAhnView::OnCameraInvert() {
+	std::cout << "[pView] OnCameraInvert" << std::endl;
 	operation = INVERT;
 }

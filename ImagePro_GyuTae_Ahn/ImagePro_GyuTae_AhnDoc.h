@@ -87,6 +87,7 @@ public:
 
 	//Image Pixel Region processing
 	void Convolve(unsigned char** input_img, unsigned char** output_img, int cols, int rows, float mask[][3], int bias, int depth);
+	void Convolve(unsigned char** input_img, unsigned char** output_img, int cols, int rows, float mask[][5], int bias, int depth);
 	void RegionSharpening();
 	void RegionBlurring();
 	void RegionSobel();
