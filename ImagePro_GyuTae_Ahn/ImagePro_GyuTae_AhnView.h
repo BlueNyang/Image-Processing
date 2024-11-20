@@ -18,6 +18,7 @@ public:
 	CImageProGyuTaeAhnDoc* GetDocument() const;
 	int viewMode;
 	char AVIFileName[256];
+	int operation;
 
 // Operations
 public:
@@ -50,6 +51,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	void LoadAVIFile(CDC* pDC);
+	void OnFrame(unsigned char* data);
 	afx_msg void OnPixelAdd();
 	afx_msg void OnPixelSub();
 	afx_msg void OnPixelMul();
@@ -93,6 +95,11 @@ public:
 	afx_msg void OnGeometryMyWarping();
 	afx_msg void OnGeometryWarpingSmile();
 	afx_msg void OnAviView();
+	afx_msg void OnCameraView();
+	afx_msg void OnVideoSharpening();
+	afx_msg void OnVideoSubtract();
+	afx_msg void OnVideoBlurring();
+	afx_msg void OnVideoInvert();
 };
 
 #ifndef _DEBUG  // debug version in ImagePro_GyuTae_AhnView.cpp

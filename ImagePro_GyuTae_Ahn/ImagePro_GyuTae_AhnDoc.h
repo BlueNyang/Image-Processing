@@ -31,6 +31,8 @@ public:
 
 	unsigned char** morphed_img[10];
 
+	bool console_output;
+
 // Operations
 public:
 

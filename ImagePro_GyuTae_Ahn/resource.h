@@ -112,13 +112,25 @@
 #define ID_GEOMETRY_MORPHING_NORMAL     32850
 #define ID_VIDEOPROCESSING_AVIFILEOUTPUT 32851
 #define ID_AVI_VIEW                     32852
+#define ID_VIDEOPROCESSING_CAMERAVIEW   32853
+#define ID_CAMERA_VIEW                  32854
+#define ID_CAMERA_SHARPENING            32855
+#define ID_VIDEOPROCESSING_CAMERAPROCESSING 32856
+#define ID_CAMERAPROCESSING_CAMERASHARPENING 32857
+#define ID_CAMERA_SUBTRACT              32858
+#define ID_VIDEO_SHARPENING             32859
+#define ID_VIDEO_SUBTRACT               32860
+#define ID_VIDEOPROCESSING_SOBEL        32861
+#define ID_VIDEO_SOBEL                  32862
+#define ID_VIDEO_INVERT                 32863
+#define ID_VIDEO_BLURRING               32864
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        310
-#define _APS_NEXT_COMMAND_VALUE         32853
+#define _APS_NEXT_COMMAND_VALUE         32865
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

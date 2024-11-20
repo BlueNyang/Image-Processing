@@ -25,6 +25,21 @@
 #define TWO_IMAGES_SCALED 4
 #define MORPHING 8
 #define AVI_FILE 16
+#define CAMERA 32
+
+#define RGBMODE 1
+#define YUVMODE 2
+#define BMWIDTH 640
+#define BMHEIGHT 480
+#define IMAGE_SIZE (BMWIDTH * BMHEIGHT)
+
+#define NO_OPERATION 0
+#define SHARPENING 1
+#define SUBTRACT 2
+#define BLURRING 3
+#define INVERT 4
+
+#define CLIP(x) (((x) < 0) ? 0 : (((x) > 255) ? 255 : (x)))
 
 // CImageProGyuTaeAhnView
 
@@ -76,13 +91,23 @@ BEGIN_MESSAGE_MAP(CImageProGyuTaeAhnView, CScrollView)
 	ON_COMMAND(ID_GEOMETRY_WARPING_SMILE, &CImageProGyuTaeAhnView::OnGeometryWarpingSmile)
 	ON_COMMAND(ID_GEOMETRY_MORPHING_NORMAL, &CImageProGyuTaeAhnView::OnGeometryMorphing)
 	ON_COMMAND(ID_AVI_VIEW, &CImageProGyuTaeAhnView::OnAviView)
+	ON_COMMAND(ID_CAMERA_VIEW, &CImageProGyuTaeAhnView::OnCameraView)
+	ON_COMMAND(ID_VIDEO_SHARPENING, &CImageProGyuTaeAhnView::OnVideoSharpening)
+	ON_COMMAND(ID_VIDEO_SUBTRACT, &CImageProGyuTaeAhnView::OnVideoSubtract)
+	ON_COMMAND(ID_VIDEO_BLURRING, &CImageProGyuTaeAhnView::OnVideoBlurring)
+	ON_COMMAND(ID_VIDEO_INVERT, &CImageProGyuTaeAhnView::OnVideoInvert)
 END_MESSAGE_MAP()
 
 // CImageProGyuTaeAhnView construction/destruction
 
+int IMGmode;
+CImageProGyuTaeAhnView* imageProView_obj;
+
 CImageProGyuTaeAhnView::CImageProGyuTaeAhnView() noexcept
 {
 	viewMode = TWO_IMAGES;
+	IMGmode = YUVMODE;
+	operation = NO_OPERATION;
 }
 
 CImageProGyuTaeAhnView::~CImageProGyuTaeAhnView()
@@ -100,7 +125,7 @@ BOOL CImageProGyuTaeAhnView::PreCreateWindow(CREATESTRUCT& cs)
 // CImageProGyuTaeAhnView drawing
 
 void CImageProGyuTaeAhnView::OnDraw(CDC* pDC) {
-	std::cout << "[pView] Invalidating" << std::endl;
+	if (viewMode != CAMERA) std::cout << "[pView] Invalidating" << std::endl;
 	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
 
 	ASSERT_VALID(pDoc);
@@ -113,6 +138,9 @@ void CImageProGyuTaeAhnView::OnDraw(CDC* pDC) {
 	if (viewMode == AVI_FILE) {
 		std::cout << " >[OnDraw] viewMode: AVI FILE" << std::endl;
 		LoadAVIFile(pDC);
+		return;
+	}
+	else if (viewMode == CAMERA) {
 		return;
 	}
 
@@ -156,7 +184,7 @@ void CImageProGyuTaeAhnView::OnDraw(CDC* pDC) {
 					pDC->SetPixel(x + pDoc->imageWidth + 30, y,
 						RGB(pDoc->compare_img[y][x], pDoc->compare_img[y][x], pDoc->compare_img[y][x]));
 
-			for (int i = 0; i < 10; i++) {
+			for (int i = 0; i < 5; i++) {
 				for (int y = 0; y < pDoc->imageHeight; y++)
 					for (int x = 0; x < pDoc->imageWidth; x++)
 						pDC->SetPixel(x + pDoc->imageWidth * 2 + 60, y,
@@ -245,6 +273,50 @@ void CImageProGyuTaeAhnView::LoadAVIFile(CDC* pDC) {
 
 				image = (unsigned char*)((LPSTR)pbmih + (WORD)pbmih->biSize);
 
+				if (operation != NO_OPERATION) {
+					CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+					ASSERT_VALID(pDoc);
+
+					if (!pDoc)
+						return;
+					int depth = 3;
+					pDoc->console_output = false;
+					pDoc->imageWidth = fi.dwWidth;
+					pDoc->imageHeight = fi.dwHeight;
+					pDoc->depth = depth;
+
+					pDoc->input_img = (unsigned char**)malloc(sizeof(unsigned char*) * fi.dwHeight);
+					pDoc->output_img = (unsigned char**)malloc(sizeof(unsigned char*) * fi.dwHeight);
+
+					for (y = 0; y < pDoc->imageHeight; y++) {
+						pDoc->input_img[y] = (unsigned char*)malloc(sizeof(unsigned char) * fi.dwWidth * depth);
+						pDoc->output_img[y] = (unsigned char*)malloc(sizeof(unsigned char) * fi.dwWidth * depth);
+					}
+
+					for (y = 0; y < fi.dwHeight; y++)
+					{
+						for (x = 0; x < fi.dwWidth * depth; x++)
+						{
+							pDoc->input_img[y][x] = image[y * fi.dwWidth * depth + x];
+						}
+					}
+
+					if (operation == SHARPENING)
+						pDoc->RegionSharpening();
+					else if (operation == BLURRING)
+						pDoc->RegionBlurring();
+					else if (operation == INVERT)
+						pDoc->PixelInvert();
+
+					for (y = 0; y < fi.dwHeight; y++)
+					{
+						for (x = 0; x < fi.dwWidth * depth; x++)
+						{
+							image[y * fi.dwWidth * depth + x] = pDoc->output_img[y][x];
+						}
+					}
+
+				}
 				for (y = 0; y < fi.dwHeight; y++)
 				{
 					for (x = 0; x < fi.dwWidth; x++)
@@ -253,9 +325,9 @@ void CImageProGyuTaeAhnView::LoadAVIFile(CDC* pDC) {
 							RGB(image[(y * fi.dwWidth + x) * 3 + 2], image[(y * fi.dwWidth + x) * 3 + 1], image[(y * fi.dwWidth + x) * 3]));
 					}
 				}
-			}
-		}
-	}
+			} // for frame
+		} // if stream type is video
+	} // for stream
 
 	std::cout << " >[LoadAVIFile] Done" << std::endl;
 	std::cout << " >[LoadAVIFile] Frame Close" << std::endl;
@@ -265,6 +337,186 @@ void CImageProGyuTaeAhnView::LoadAVIFile(CDC* pDC) {
 
 	std::cout << " >[LoadAVIFile] Exit" << std::endl;
 	AVIFileExit();
+}
+
+void FrameCallbackProc(HWND hWnd, VIDEOHDR* hdr) {
+	if (hWnd && hdr && hdr->lpData) {
+		if (imageProView_obj) {
+			imageProView_obj->OnFrame((unsigned char*)hdr->lpData);
+		}
+	}
+}
+
+void CImageProGyuTaeAhnView::OnFrame(unsigned char* data) {
+	if (operation == SHARPENING || operation == BLURRING || operation == INVERT) {
+		CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+		ASSERT_VALID(pDoc);
+
+		if (!pDoc)
+			return;
+
+		int depth = 3;
+		int x, y, i;
+		pDoc->console_output = false;
+		pDoc->imageWidth = BMWIDTH;
+		pDoc->imageHeight = BMHEIGHT;
+		pDoc->depth = depth;
+
+		pDoc->input_img = (unsigned char**)malloc(sizeof(unsigned char*) * BMHEIGHT);
+		pDoc->output_img = (unsigned char**)malloc(sizeof(unsigned char*) * BMHEIGHT);
+
+		for (i = 0; i < pDoc->imageHeight; i++) {
+			pDoc->input_img[i] = (unsigned char*)malloc(sizeof(unsigned char) * BMWIDTH * depth);
+			pDoc->output_img[i] = (unsigned char*)malloc(sizeof(unsigned char) * BMWIDTH * depth);
+		}
+
+		if (IMGmode == RGBMODE) {
+			for (y = 0; y < BMHEIGHT; y++) {
+				for (x = 0; x < BMWIDTH * depth; x++) {
+					pDoc->input_img[y][x] = data[y * BMWIDTH * depth + x];
+				}
+			}
+		}
+		else if (IMGmode == YUVMODE) {
+			unsigned char dest[IMAGE_SIZE * 3];
+			unsigned int rgbPos = 0;
+			int y0, u, y1, v, r, g, b;
+			for (unsigned int k = 0; k < IMAGE_SIZE * 2; k += 4) {
+				y0 = data[k];
+				u = data[k + 1];
+				y1 = data[k + 2];
+				v = data[k + 3];
+
+				r = CLIP(1.164 * (y0 - 16) + 1.596 * (v - 128));
+				g = CLIP(1.164 * (y0 - 16) - 0.813 * (v - 128) - 0.392 * (u - 128));
+				b = CLIP(1.164 * (y0 - 16) + 2.017 * (u - 128));
+
+				dest[rgbPos++] = r;
+				dest[rgbPos++] = g;
+				dest[rgbPos++] = b;
+
+				r = CLIP(1.164 * (y1 - 16) + 1.596 * (v - 128));
+				g = CLIP(1.164 * (y1 - 16) - 0.813 * (v - 128) - 0.392 * (u - 128));
+				b = CLIP(1.164 * (y1 - 16) + 2.017 * (u - 128));
+
+				dest[rgbPos++] = r;
+				dest[rgbPos++] = g;
+				dest[rgbPos++] = b;
+			}
+			for (y = 0; y < BMHEIGHT; y++) {
+				for (x = 0; x < BMWIDTH * depth; x++) {
+					pDoc->input_img[y][x] = dest[y * BMWIDTH * depth + x];
+				}
+			}
+		}
+		if (operation == SHARPENING)
+			pDoc->RegionSharpening();
+		else if (operation == BLURRING)
+			pDoc->RegionBlurring();
+		else if (operation == INVERT)
+			pDoc->PixelInvert();
+
+		if (IMGmode == RGBMODE) {
+			for (y = 0; y < BMHEIGHT; y++) {
+				for (x = 0; x < BMWIDTH * depth; x++) {
+					data[y * BMWIDTH * depth + x] = pDoc->output_img[y][x];
+				}
+			}
+		}
+		else if (IMGmode == YUVMODE) {
+			unsigned char y, u, v;
+			int yuvPos = 0;
+
+			int r, g, b;
+			for (int row = 0; row < BMHEIGHT; row++) {
+				for (int col = 0; col < BMWIDTH; col++) {
+					r = pDoc->output_img[row][col * 3];
+					g = pDoc->output_img[row][col * 3 + 1];
+					b = pDoc->output_img[row][col * 3 + 2];
+
+					y = (unsigned char)(0.257 * r + 0.504 * g + 0.095 * b + 16);
+					u = (unsigned char)(-0.148 * r - 0.291 * g + 0.499 * b + 128);
+					v = (unsigned char)(0.439 * r - 0.368 * g - 0.071 * b + 128);
+					if (col % 2 == 0) {
+						data[yuvPos++] = y;
+						data[yuvPos++] = u;
+					}
+					else {
+						data[yuvPos++] = y;
+						data[yuvPos++] = v;
+					}
+				}
+			}
+		} // IMGmode == YUVMODE
+	} // SHARPENING
+	else if (operation == SUBTRACT) {
+		static unsigned char* image1 = NULL;
+		static unsigned char* image2 = NULL;
+
+		if (IMGmode == RGBMODE) {
+			int length = IMAGE_SIZE * 3;
+			int i;
+
+			if (image1 == NULL) {
+				image1 = (unsigned char*)malloc(sizeof(unsigned char) * length);
+				for (i = 0; i < length; i++) image1[i] = data[i];
+			}
+			else if (image2 == NULL) {
+				image2 = (unsigned char*)malloc(sizeof(unsigned char) * length);
+				for (i = 0; i < length; i++) image2[i] = data[i];
+			}
+			else {
+				for (i = 0; i < length; i++) image1[i] = data[i];
+				for (i = 0; i < length; i++) image2[i] = data[i];
+			}
+			if (image1 && image2) {
+				for (int i = 0; i < BMWIDTH * BMHEIGHT; i++) {
+					if (abs((image1[i * 3] + image1[i * 3 + 1] + image1[i * 3 + 2]) / 3 -
+						(image2[i * 3] + image2[i * 3 + 1] + image2[i * 3 + 2]) / 3) < 20)
+					{
+						data[i * 3] = (char)0;
+						data[i * 3 + 1] = (char)0;
+						data[i * 3 + 2] = (char)0;
+					}
+					else {
+						data[i * 3] = (char)255;
+						data[i * 3 + 1] = (char)255;
+						data[i * 3 + 2] = (char)255;
+					}
+				}
+			}
+		} // RGBMODE
+		else if (IMGmode == YUVMODE) {
+			int length = BMWIDTH * BMHEIGHT * 2;
+			int i;
+			if (image1 == NULL) {
+				image1 = (unsigned char*)malloc(length);
+				for (i = 0; i < length; i++) image1[i] = data[i];
+			}
+			else if (image2 == NULL) {
+				image2 = (unsigned char*)malloc(length);
+				for (i = 0; i < length; i++) image2[i] = data[i];
+			}
+			else {
+				for (i = 0; i < length; i++) image1[i] = image2[i];
+				for (i = 0; i < length; i++) image2[i] = data[i];
+			}
+			if (image1 && image2) {
+				for (int i = 0; i < BMWIDTH * BMHEIGHT; i++) {
+					if (abs(image1[i * 2] - image2[i * 2]) < 20)
+					{
+						data[i * 2] = (char)0;
+						data[i * 2 + 1] = (char)128;
+					}
+					else {
+						data[i * 2] = (char)255;
+						data[i * 2 + 1] = (char)128;
+					}
+				}
+			}
+		} // YUVMODE
+	} // SUBTRACT
+	Invalidate(FALSE);
 }
 
 void CImageProGyuTaeAhnView::OnInitialUpdate()
@@ -351,6 +603,7 @@ void CImageProGyuTaeAhnView::OnPixelAdd()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->PixelAdd();
 
 	viewMode = TWO_IMAGES;
@@ -366,6 +619,7 @@ void CImageProGyuTaeAhnView::OnPixelSub()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->PixelSub();
 
 	viewMode = TWO_IMAGES;
@@ -382,6 +636,7 @@ void CImageProGyuTaeAhnView::OnPixelMul()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->PixelMul();
 
 	viewMode = TWO_IMAGES;
@@ -398,6 +653,7 @@ void CImageProGyuTaeAhnView::OnPixelDiv()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->PixelDiv();
 
 	viewMode = TWO_IMAGES;
@@ -414,6 +670,7 @@ void CImageProGyuTaeAhnView::OnPixelHistoEq()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->PixelHistoEQ();
 
 	viewMode = TWO_IMAGES;
@@ -430,6 +687,7 @@ void CImageProGyuTaeAhnView::OnPixelConstrast()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->PixelContrast();
 
 	viewMode = TWO_IMAGES;
@@ -446,6 +704,7 @@ void CImageProGyuTaeAhnView::OnPixelBinarization()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->PixelBinarization(120);
 
 	viewMode = TWO_IMAGES;
@@ -461,6 +720,7 @@ void CImageProGyuTaeAhnView::OnPixelInvert()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->PixelInvert();
 
 	viewMode = TWO_IMAGES;
@@ -477,6 +737,7 @@ void CImageProGyuTaeAhnView::OnPixelAdd2Images()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->PixelAdd2Images();
 
 	viewMode = THREE_IMAGES;
@@ -494,6 +755,7 @@ void CImageProGyuTaeAhnView::OnPixelSub2Images()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->PixelSub2Images();
 
 	viewMode = THREE_IMAGES;
@@ -509,6 +771,7 @@ void CImageProGyuTaeAhnView::OnPixelDetection()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->PixelDetection2Images();
 
 	viewMode = THREE_IMAGES;
@@ -524,6 +787,7 @@ void CImageProGyuTaeAhnView::OnRegionSharpening()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->RegionSharpening();
 
 	viewMode = TWO_IMAGES;
@@ -540,6 +804,7 @@ void CImageProGyuTaeAhnView::OnRegionBlurring()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->RegionBlurring();
 
 	viewMode = TWO_IMAGES;
@@ -556,6 +821,7 @@ void CImageProGyuTaeAhnView::OnRegionSobel()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->RegionSobel();
 
 	viewMode = TWO_IMAGES;
@@ -571,6 +837,7 @@ void CImageProGyuTaeAhnView::OnRegionPrewitt()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->RegionPrewitt();
 
 	viewMode = TWO_IMAGES;
@@ -586,6 +853,7 @@ void CImageProGyuTaeAhnView::OnRegionRobert()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->RegionRobert();
 
 	viewMode = TWO_IMAGES;
@@ -601,6 +869,7 @@ void CImageProGyuTaeAhnView::OnMedianFilter()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->RegionMedianFilter();
 
 	viewMode = TWO_IMAGES;
@@ -616,6 +885,7 @@ void CImageProGyuTaeAhnView::OnRegionEmbossing()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->RegionEmbossing();
 
 	viewMode = TWO_IMAGES;
@@ -631,6 +901,7 @@ void CImageProGyuTaeAhnView::OnErosion(unsigned char background) {
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc ->Min_Value_Filter(background);
 
 	viewMode = TWO_IMAGES;
@@ -646,6 +917,7 @@ void CImageProGyuTaeAhnView::OnDilation(unsigned char background)
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->Max_Value_Filter(background);
 
 	viewMode = TWO_IMAGES;
@@ -663,6 +935,7 @@ void CImageProGyuTaeAhnView::OnOpening(unsigned char background)
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->Opening(background);
 
 	viewMode = TWO_IMAGES;
@@ -677,6 +950,7 @@ void CImageProGyuTaeAhnView::OnClosing(unsigned char background) {
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->Closing(background);
 
 	viewMode = TWO_IMAGES;
@@ -691,6 +965,7 @@ void CImageProGyuTaeAhnView::OnCountCell() {
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->CountCell();
 
 	viewMode = TWO_IMAGES;
@@ -739,6 +1014,7 @@ void CImageProGyuTaeAhnView::OnGeometryZoominPixelCopy()
 	if (!pDoc)
 		return;
 
+	pDoc->console_output = true;
 	pDoc->GeometryZoominPixelCopy();
 
 	viewMode = TWO_IMAGES_SCALED;
@@ -752,6 +1028,8 @@ void CImageProGyuTaeAhnView::OnGeometryZoominInterpolation() {
 
 	if (!pDoc)
 		return;
+
+	pDoc->console_output = true;
 	pDoc->GeometryZoominInterpolation();
 
 	viewMode = TWO_IMAGES_SCALED;
@@ -767,6 +1045,8 @@ void CImageProGyuTaeAhnView::OnGeometryZoomoutSubsampling()
 
 	if (!pDoc)
 		return;
+
+	pDoc->console_output = true;
 	pDoc->GeometryZoomoutSubsampling();
 
 	viewMode = TWO_IMAGES_SCALED;
@@ -782,6 +1062,8 @@ void CImageProGyuTaeAhnView::OnGeometryZoomoutAverage()
 
 	if (!pDoc)
 		return;
+
+	pDoc->console_output = true;
 	pDoc->GeometryZoomoutAverage();
 
 	viewMode = TWO_IMAGES_SCALED;
@@ -797,6 +1079,8 @@ void CImageProGyuTaeAhnView::OnGeometryRotate()
 
 	if (!pDoc)
 		return;
+
+	pDoc->console_output = true;
 	pDoc->GeometryRotate();
 
 	viewMode = TWO_IMAGES_SCALED;
@@ -812,6 +1096,8 @@ void CImageProGyuTaeAhnView::OnGeometryVerticalFlip()
 
 	if (!pDoc)
 		return;
+
+	pDoc->console_output = true;
 	pDoc->GeometryVerticalFlip();
 
 	viewMode = TWO_IMAGES_SCALED;
@@ -827,6 +1113,8 @@ void CImageProGyuTaeAhnView::OnGeometryHorizontalFlip()
 
 	if (!pDoc)
 		return;
+
+	pDoc->console_output = true;
 	pDoc->GeometryHorizontalFlip();
 
 	viewMode = TWO_IMAGES_SCALED;
@@ -842,6 +1130,8 @@ void CImageProGyuTaeAhnView::OnGeometryWarping()
 
 	if (!pDoc)
 		return;
+
+	pDoc->console_output = true;
 	pDoc->GeometryWarpingNormal();
 
 	viewMode = TWO_IMAGES;
@@ -857,6 +1147,8 @@ void CImageProGyuTaeAhnView::OnGeometryMyWarping()
 
 	if (!pDoc)
 		return;
+
+	pDoc->console_output = true;
 	pDoc->GeometryMyImageWarping();
 
 	viewMode = TWO_IMAGES;
@@ -872,6 +1164,8 @@ void CImageProGyuTaeAhnView::OnGeometryWarpingSmile()
 
 	if (!pDoc)
 		return;
+
+	pDoc->console_output = true;
 	pDoc->GeometryMyImageWarping_Smile();
 
 	viewMode = TWO_IMAGES;
@@ -887,6 +1181,7 @@ void CImageProGyuTaeAhnView::OnGeometryMorphing()
 
 	if (!pDoc)
 		return;
+	pDoc->console_output = true;
 	pDoc->GeometryMorphingNormal();
 
 	viewMode = MORPHING;
@@ -907,4 +1202,73 @@ void CImageProGyuTaeAhnView::OnAviView()
 		viewMode = AVI_FILE;
 	}
 	Invalidate(FALSE);
+}
+
+void CImageProGyuTaeAhnView::OnCameraView()
+{
+	std::cout << "[pView] OnCameraView" << std::endl;
+	char DeviceName[80];
+	char DeviceVersion[80];
+	HWND hWndC = 0;
+	HWND parent = m_hWnd;
+
+	for (int wIndex = 0; wIndex < 10; wIndex++) {
+		if (capGetDriverDescription(wIndex, DeviceName, sizeof(DeviceName), DeviceVersion, sizeof(DeviceVersion))) {
+			std::cout << "[pView] Camera Device Name: " << DeviceName << std::endl;
+			std::cout << "[pView] Camera Device Version: " << DeviceVersion << std::endl;
+			hWndC = capCreateCaptureWindow("My Own Capture Window",
+				WS_CHILD | WS_VISIBLE, 0, 0, BMWIDTH, BMHEIGHT, parent, 0);
+			if (capDriverConnect(hWndC, wIndex)) {
+				std::cout << "[pView] Camera Connected" << std::endl;
+				BITMAPINFO bmi;
+				capPreviewRate(hWndC, 8);
+				capPreview(hWndC, TRUE);
+				memset(&bmi.bmiHeader, 0, sizeof(bmi.bmiHeader));
+
+				if (IMGmode == RGBMODE) {
+					std::cout << "[pView] RGB Mode" << std::endl;
+					memset(&bmi.bmiHeader, 0, sizeof(bmi.bmiHeader));
+					bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+					bmi.bmiHeader.biWidth = BMWIDTH;
+					bmi.bmiHeader.biHeight = BMHEIGHT;
+					bmi.bmiHeader.biBitCount = 24;
+					bmi.bmiHeader.biPlanes = 1;
+				}
+				else {
+					std::cout << "[pView] YUV Mode" << std::endl;
+					memset(&bmi.bmiHeader, 0, sizeof(bmi.bmiHeader));
+					capGetVideoFormat(hWndC, &bmi, sizeof(BITMAPINFO));
+					bmi.bmiHeader.biWidth = BMWIDTH;
+					bmi.bmiHeader.biHeight = BMHEIGHT;
+					bmi.bmiHeader.biCompression = 0x32595559; // YUY2
+					bmi.bmiHeader.biSizeImage = IMAGE_SIZE * 2;
+				}
+				if (capSetVideoFormat(hWndC, &bmi, sizeof(bmi))) {
+					std::cout << "[pView] Set Video Format" << std::endl;
+					capSetCallbackOnFrame(hWndC, FrameCallbackProc);
+					viewMode = CAMERA;
+					imageProView_obj = this;
+					return;
+				}
+				else capDriverDisconnect(hWndC);
+			}
+			::DestroyWindow(hWndC);
+		}
+	}
+} // OnCameraView
+
+void CImageProGyuTaeAhnView::OnVideoSharpening() {
+	operation = SHARPENING;
+}
+
+void CImageProGyuTaeAhnView::OnVideoSubtract() {
+	operation = SUBTRACT;
+}
+
+void CImageProGyuTaeAhnView::OnVideoBlurring() {
+	operation = BLURRING;
+}
+
+void CImageProGyuTaeAhnView::OnVideoInvert() {
+	operation = INVERT;
 }
