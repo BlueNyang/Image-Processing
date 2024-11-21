@@ -52,6 +52,9 @@ protected:
 public:
 	void LoadAVIFile(CDC* pDC);
 	void OnFrame(unsigned char* data);
+
+	afx_msg void OnCopyResultToInput();
+
 	afx_msg void OnPixelAdd();
 	afx_msg void OnPixelSub();
 	afx_msg void OnPixelMul();
@@ -111,6 +114,12 @@ public:
 	afx_msg void OnCameraSobel();
 	afx_msg void OnCameraSubtract();
 	afx_msg void OnCameraInvert();
+
+	afx_msg void OnFFT2D();
+	afx_msg void OnIFFT2D();
+	afx_msg void OnLowPassFilter();
+	afx_msg void OnHighPassFilter();
+	afx_msg void OnNoiseReduction();
 };
 
 #ifndef _DEBUG  // debug version in ImagePro_GyuTae_AhnView.cpp

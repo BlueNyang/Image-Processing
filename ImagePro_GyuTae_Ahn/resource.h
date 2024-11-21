@@ -133,13 +133,25 @@
 #define ID_CAMERA_SOBEL                 32871
 #define ID_CAMERAPROCESSING_CAMERASUBTRACT 32872
 #define ID_CAMERA_INVERT                32873
+#define ID_FFT_2D                       32874
+#define ID_FREQUENCYPROCESSING_INVERSEFASTFOURIERT 32875
+#define ID_IFFT2D                       32876
+#define ID_IFFT_2D                      32877
+#define ID_FREQUENCYPROCESSING_LOWFREQPASSFILTER 32878
+#define ID_LOW_PASS_FILTER              32879
+#define ID_FREQUENCYPROCESSING_HIGHFREQPASSFILTER 32880
+#define ID_HIGH_PASS_FILTER             32881
+#define ID_FREQUENCYPROCESSING_NOISEREDUCTION 32882
+#define ID_NOISE_REDUCTION              32883
+#define ID_ETC_COPYRESULTTOINPUT        32884
+#define ID_COPY_OUT_TO_IN               32885
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        310
-#define _APS_NEXT_COMMAND_VALUE         32874
+#define _APS_NEXT_COMMAND_VALUE         32886
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

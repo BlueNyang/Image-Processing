@@ -5,6 +5,11 @@
 
 #pragma once
 
+typedef struct {
+	double re;
+	double im;
+} complex_num;
+
 
 class CImageProGyuTaeAhnDoc : public CDocument
 {
@@ -30,6 +35,9 @@ public:
 	unsigned char** gOutput_img;
 
 	unsigned char** morphed_img[10];
+
+	complex_num** fft_result;
+	complex_num** ifft_result;
 
 	bool console_output;
 
@@ -120,5 +128,16 @@ public:
 	void GeometryMorphing(control_line source_lines[], control_line dest_lines[], int control_line_num);
 	void GeometryMorphingNormal();
 	void GeometryMorphingMyImg();
+
+	//Frequency Domain Processing
+	int Reverse_Bit_Order(int index, int log2N);
+	void Shuffle_Data(complex_num x[], int N, int log2N);
+	void Butterfly_Computation(complex_num x[], int N, int log2N, bool inverse);
+	void FFT1D(complex_num x[], int N, int log2N, bool inverse);
+	void FFT2D();
+	void IFFT2D();
+	void LowPassFilter();
+	void HighPassFilter();
+	void NoiseReduction();
 };
 	

@@ -2035,3 +2035,295 @@ void CImageProGyuTaeAhnDoc::GeometryMorphingMyImg() {
 
 	GeometryMorphing(source_lines, dest_lines, 23);
 }
+
+int CImageProGyuTaeAhnDoc::Reverse_Bit_Order(int index, int log2N) {
+	unsigned int r = 0, b;
+	for (unsigned int k = 0; k < log2N; k++) {
+		b = (index & (1 << k)) >> k;
+		r = (r << 1) | b;
+	}
+	return r;
+}
+
+void CImageProGyuTaeAhnDoc::Shuffle_Data(complex_num x[], int N, int log2N) {
+	complex_num* temp = (complex_num*)malloc(N * sizeof(complex_num));
+	for (int i = 0; i < N; i++) {
+		temp[i].re = x[Reverse_Bit_Order(i, log2N)].re;
+		temp[i].im = x[Reverse_Bit_Order(i, log2N)].im;
+	}
+	for (int i = 0; i < N; i++) {
+		x[i].re = temp[i].re;
+		x[i].im = temp[i].im;
+	}
+	free(temp);
+}
+
+void CImageProGyuTaeAhnDoc::Butterfly_Computation(complex_num x[], int N, int log2N, bool inverse) {
+	
+	complex_num* W = (complex_num*)malloc(sizeof(complex_num) * N / 2);
+	complex_num temp;
+	
+	int groupSize, start, j;
+
+	for (int k = 1; k <= log2N; k++) {
+		groupSize = (int)pow((float)2, (int)k);
+		for (int i = 0; i < groupSize / 2; i++) {
+			W[i].re = cos(i * 2.0 * PI / (double)groupSize);
+			if (inverse) W[i].im = sin(i * 2.0 * PI / (double)groupSize);
+			else W[i].im = -sin(i * 2.0 * PI / (double)groupSize);
+		}
+		start = 0;
+		for (int l = 0; l < N / groupSize; l++) {
+			for (int i = start; i < start + groupSize / 2; i++) {
+				j = i + groupSize / 2;
+				temp.re = W[i - start].re * x[j].re - W[i - start].im * x[j].im;
+				temp.im = W[i - start].im * x[j].re + W[i - start].re * x[j].im;
+				x[j].re = x[i].re - temp.re;
+				x[j].im = x[i].im - temp.im;
+				x[i].re = x[i].re + temp.re;
+				x[i].im = x[i].im + temp.im;
+			}
+			start = start + groupSize;
+		}
+	}
+	if (inverse) {
+		for (int i = 0; i < N; i++) {
+			x[i].re = x[i].re / N;
+			x[i].im = x[i].im / N;
+		}
+	}
+}
+
+void CImageProGyuTaeAhnDoc::FFT1D(complex_num x[], int N, int log2N, bool inverse) {
+	Shuffle_Data(x, N, log2N);
+	Butterfly_Computation(x, N, log2N, inverse);
+}
+
+void CImageProGyuTaeAhnDoc::FFT2D() {
+	if(console_output) std::cout << "[pDoc] FFT2D" << std::endl;
+
+	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
+
+	unsigned char** temp_img;
+
+	int num = imageWidth;
+
+	int log2N = 0;
+
+	while (num >= 2) {
+		num >>= 1;
+		log2N++;
+	}
+
+	if (console_output) std::cout << " >[FFT2D] Malloc" << std::endl;
+	complex_num* data = (complex_num*)malloc(imageWidth * sizeof(complex_num));
+
+	fft_result = (complex_num**)malloc(imageHeight * sizeof(complex_num*));
+	temp_img = (unsigned char**)malloc(imageHeight * sizeof(unsigned char*));
+
+	for (int i = 0; i < imageHeight; i++) {
+		fft_result[i] = (complex_num*)malloc(imageWidth * sizeof(complex_num));
+		temp_img[i] = (unsigned char*)malloc(imageWidth);
+	}
+
+	if (console_output) std::cout << " >[FFT2D] Calculating..." << std::endl;
+	for (int y = 0; y < imageHeight; y++) {
+		for (int x = 0; x < imageWidth; x++) {
+			data[x].re = input_img[y][x];
+			data[x].im = 0;
+		}
+
+		FFT1D(data, imageWidth, log2N, false);
+
+		for (int x = 0; x < imageWidth; x++) {
+			fft_result[y][x].re = data[x].re;
+			fft_result[y][x].im = data[x].im;
+		}
+	}
+
+	num = imageHeight;
+	log2N = 0;
+	while (num >= 2) {
+		num >>= 1;
+		log2N++;
+	}
+
+	free(data);
+	data = (complex_num*)malloc(imageHeight * sizeof(complex_num));
+
+	for (int x = 0; x < imageWidth; x++) {
+		for (int y = 0; y < imageHeight; y++) {
+			data[y].re = fft_result[y][x].re;
+			data[y].im = fft_result[y][x].im;
+		}
+
+		FFT1D(data, imageHeight, log2N, false);
+
+		for (int y = 0; y < imageHeight; y++) {
+			fft_result[y][x].re = data[y].re;
+			fft_result[y][x].im = data[y].im;
+		}
+	}
+	
+	int value;
+	for (int y = 0; y < imageHeight; y++) {
+		for (int x = 0; x < imageWidth; x++) {
+			value = 20 * (int)log(fabs(sqrt(fft_result[y][x].re * fft_result[y][x].re + fft_result[y][x].im * fft_result[y][x].im)));
+			if (value > 255) value = 255;
+			if (value < 0) value = 0;
+			output_img[y][x] = (unsigned char)value;
+		}
+	}
+
+	for (int i = 0; i < imageHeight; i += imageHeight / 2) {
+		for (int j = 0; j < imageWidth; j += imageWidth / 2) {
+			for (int row = 0; row < imageHeight / 2; row++) {
+				for (int col = 0; col < imageWidth / 2; col++) {
+					temp_img[(imageHeight / 2 - 1) - row + i][(imageWidth / 2 - 1) - col + j]
+						= output_img[i + row][j + col];
+				}
+			}
+		}
+	}
+	for (int y = 0; y < imageHeight; y++) {
+		for (int x = 0; x < imageWidth; x++) {
+			output_img[y][x] = temp_img[y][x];
+		}
+	}
+} // FFT2D
+
+void CImageProGyuTaeAhnDoc::IFFT2D() {
+	if (console_output) std::cout << "[pDoc] IFFT2D" << std::endl;
+
+	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
+	if (fft_result == NULL) {
+		std::cout << " >[IFFT2D] FFT2D first" << std::endl;
+		AfxMessageBox("FFT2D first");
+		return;
+	}
+
+	int num = imageWidth;
+	int log2N = 0;
+
+	while (num >= 2) {
+		num >>= 1;
+		log2N++;
+	}
+
+	if (console_output) std::cout << " >[IFFT2D] Malloc" << std::endl;
+	complex_num* data = (complex_num*)malloc(imageWidth * sizeof(complex_num));
+
+	ifft_result = (complex_num**)malloc(imageHeight * sizeof(complex_num*));
+	for (int i = 0; i < imageHeight; i++) {
+		ifft_result[i] = (complex_num*)malloc(imageWidth * sizeof(complex_num));
+	}
+
+	for (int y = 0; y < imageHeight; y++) {
+		for (int x = 0; x < imageWidth; x++) {
+			data[x].re = fft_result[y][x].re;
+			data[x].im = fft_result[y][x].im;
+		}
+
+		FFT1D(data, imageWidth, log2N, true);
+
+		for (int x = 0; x < imageWidth; x++) {
+			ifft_result[y][x].re = data[x].re;
+			ifft_result[y][x].im = data[x].im;
+		}
+	}
+
+	num = imageHeight;
+	log2N = 0;
+	while (num >= 2) {
+		num >>= 1;
+		log2N++;
+	}
+
+	free(data);
+	data = (complex_num*)malloc(imageHeight * sizeof(complex_num));
+
+	for (int x = 0; x < imageWidth; x++) {
+		for (int y = 0; y < imageHeight; y++) {
+			data[y].re = ifft_result[y][x].re;
+			data[y].im = ifft_result[y][x].im;
+		}
+
+		FFT1D(data, imageHeight, log2N, true);
+
+		for (int y = 0; y < imageHeight; y++) {
+			ifft_result[y][x].re = data[y].re;
+			ifft_result[y][x].im = data[y].im;
+		}
+	}
+
+	for (int y = 0; y < imageHeight; y++) {
+		for (int x = 0; x < imageWidth; x++) {
+			output_img[y][x] = (unsigned char)ifft_result[y][x].re;
+		}
+	}
+} // IFFT2D
+
+void CImageProGyuTaeAhnDoc::LowPassFilter() {
+	if (console_output) std::cout << "[pDoc] LowPassFilter" << std::endl;
+	int u, v;
+	double B;
+
+	double D0 = 32.0;
+	double N = 2.0;
+
+	FFT2D();
+
+	if (console_output) std::cout << " >[LowPassFilter] Filtering..." << std::endl;
+	for (int y = 0; y < imageHeight; y++) {
+		for (int x = 0; x < imageWidth; x++) {
+			u = x, v = y;
+			if (u > imageWidth / 2) u = imageWidth - u;
+			if (v > imageHeight / 2) v = imageHeight - v;
+
+			B = 1.0 / (1.0 + pow(sqrt((double)(u * u + v * v)) / D0, 2 * N));
+
+			fft_result[y][x].re = fft_result[y][x].re * B;
+			fft_result[y][x].im = fft_result[y][x].im * B;
+		}
+	}
+	IFFT2D();
+} // LowPassFilter
+
+void CImageProGyuTaeAhnDoc::HighPassFilter() {
+	if (console_output) std::cout << "[pDoc] HighPassFilter" << std::endl;
+	int u, v;
+	double B;
+
+	double D0 = 32.0;
+	double N = 2.0;
+
+	FFT2D();
+
+	if (console_output) std::cout << " >[HighPassFilter] Filtering..." << std::endl;
+	for (int y = 0; y < imageHeight; y++) {
+		for (int x = 0; x < imageWidth; x++) {
+			u = x, v = y;
+			if (u > imageWidth / 2) u = imageWidth - u;
+			if (v > imageHeight / 2) v = imageHeight - v;
+
+			B = 1.0 / (1.0 + pow(D0 / sqrt((double)(u * u + v * v)), 2 * N));
+
+			fft_result[y][x].re = fft_result[y][x].re * B;
+			fft_result[y][x].im = fft_result[y][x].im * B;
+		}
+	}
+	IFFT2D();
+} // HighPassFilter
+
+void CImageProGyuTaeAhnDoc::NoiseReduction() {
+	if (console_output) std::cout << "[pDoc] NoiseReduction" << std::endl;
+	FFT2D();
+	if (console_output) std::cout << " >[NoiseReduction] Filtering..." << std::endl;
+	fft_result[0][64].re = 0.0;
+	fft_result[0][64].im = 0.0;
+	fft_result[0][192].re = 0.0;
+	fft_result[0][192].im = 0.0;
+	IFFT2D();
+} // NoiseReduction

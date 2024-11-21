@@ -53,6 +53,7 @@ BEGIN_MESSAGE_MAP(CImageProGyuTaeAhnView, CScrollView)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CImageProGyuTaeAhnView::OnFilePrintPreview)
 	ON_WM_CONTEXTMENU()
 	ON_WM_RBUTTONUP()
+	ON_COMMAND(ID_COPY_OUT_TO_IN, &CImageProGyuTaeAhnView::OnCopyResultToInput)
 	ON_COMMAND(ID_PIXEL_ADD, &CImageProGyuTaeAhnView::OnPixelAdd)
 	ON_COMMAND(ID_PIXEL_SUB, &CImageProGyuTaeAhnView::OnPixelSub)
 	ON_COMMAND(ID_PIXEL_MUL, &CImageProGyuTaeAhnView::OnPixelMul)
@@ -102,7 +103,11 @@ BEGIN_MESSAGE_MAP(CImageProGyuTaeAhnView, CScrollView)
 	ON_COMMAND(ID_CAMERA_SOBEL, &CImageProGyuTaeAhnView::OnCameraSobel)
 	ON_COMMAND(ID_CAMERA_SUBTRACT, &CImageProGyuTaeAhnView::OnCameraSubtract)
 	ON_COMMAND(ID_CAMERA_INVERT, &CImageProGyuTaeAhnView::OnCameraInvert)
-
+	ON_COMMAND(ID_FFT_2D, &CImageProGyuTaeAhnView::OnFFT2D)
+	ON_COMMAND(ID_IFFT_2D, &CImageProGyuTaeAhnView::OnIFFT2D)
+	ON_COMMAND(ID_LOW_PASS_FILTER, &CImageProGyuTaeAhnView::OnLowPassFilter)
+	ON_COMMAND(ID_HIGH_PASS_FILTER, &CImageProGyuTaeAhnView::OnHighPassFilter)
+	ON_COMMAND(ID_NOISE_REDUCTION, &CImageProGyuTaeAhnView::OnNoiseReduction)
 END_MESSAGE_MAP()
 
 // CImageProGyuTaeAhnView construction/destruction
@@ -280,7 +285,17 @@ void CImageProGyuTaeAhnView::LoadAVIFile(CDC* pDC) {
 
 				image = (unsigned char*)((LPSTR)pbmih + (WORD)pbmih->biSize);
 
-				if (operation == SHARPENING || operation == BLURRING || operation == SOBEL || operation == INVERT) {
+				if (operation == NO_OPERATION) {
+					for (y = 0; y < fi.dwHeight; y++)
+					{
+						for (x = 0; x < fi.dwWidth; x++)
+						{
+							pDC->SetPixel(x, fi.dwHeight - y - 1,
+								RGB(image[(y * fi.dwWidth + x) * 3 + 2], image[(y * fi.dwWidth + x) * 3 + 1], image[(y * fi.dwWidth + x) * 3]));
+						}
+					} // for frame
+				}
+				else if (operation == SHARPENING || operation == BLURRING || operation == SOBEL || operation == INVERT) {
 					CImageProGyuTaeAhnDoc* pDoc = GetDocument();
 					ASSERT_VALID(pDoc);
 
@@ -302,19 +317,23 @@ void CImageProGyuTaeAhnView::LoadAVIFile(CDC* pDC) {
 
 					for (y = 0; y < fi.dwHeight; y++)
 					{
-						for (x = 0; x < fi.dwWidth * depth; x++)
+						for (x = 0; x < fi.dwWidth; x++)
 						{
-							pDoc->input_img[y][x] = image[y * fi.dwWidth * depth + x];
+							if (depth == 1)
+								pDoc->input_img[y][x] = image[(fi.dwHeight - 1 - y) * fi.dwWidth + x];
+							else if (depth == 3)
+							{
+								pDoc->input_img[y][x * depth] = image[((fi.dwHeight - 1 - y) * fi.dwWidth + x) * 3 + 2];
+								pDoc->input_img[y][x * depth + 1] = image[((fi.dwHeight - 1 - y) * fi.dwWidth + x) * 3 + 1];
+								pDoc->input_img[y][x * depth + 2] = image[((fi.dwHeight - 1 - y) * fi.dwWidth + x) * 3];
+							}
 						}
 					}
 
 					if (operation == SHARPENING)
 						pDoc->RegionSharpening();
 					else if (operation == BLURRING)
-					{
 						pDoc->RegionBlurring();
-					}
-
 					else if (operation == SOBEL)
 						pDoc->RegionSobel();
 					else if (operation == INVERT)
@@ -324,20 +343,19 @@ void CImageProGyuTaeAhnView::LoadAVIFile(CDC* pDC) {
 					{
 						for (x = 0; x < fi.dwWidth * depth; x++)
 						{
-							image[y * fi.dwWidth * depth + x] = pDoc->output_img[y][x];
+							if (depth == 1) pDC->SetPixel(x, y, RGB(pDoc->output_img[y][x], pDoc->output_img[y][x], pDoc->output_img[y][x]));
+							else if (depth == 3) {
+								pDC->SetPixel(x, y, RGB(
+									pDoc->output_img[y][x * depth],
+									pDoc->output_img[y][x * depth + 1],
+									pDoc->output_img[y][x * depth + 2]
+								));
+							}
 						}
 					}
 
 				} // if operation is SHARPENING or BLURRING or INVERT
 				
-				for (y = 0; y < fi.dwHeight; y++)
-				{
-					for (x = 0; x < fi.dwWidth; x++)
-					{
-						pDC->SetPixel(x, fi.dwHeight - y - 1,
-							RGB(image[(y * fi.dwWidth + x) * 3 + 2], image[(y * fi.dwWidth + x) * 3 + 1], image[(y * fi.dwWidth + x) * 3]));
-					}
-				} // for frame
 			} // if stream type is video
 		} // for stream
 	} // for frame
@@ -608,6 +626,18 @@ CImageProGyuTaeAhnDoc* CImageProGyuTaeAhnView::GetDocument() const // non-debug 
 
 
 // CImageProGyuTaeAhnView message handlers
+
+void CImageProGyuTaeAhnView::OnCopyResultToInput() {
+	std::cout << "[pView] OnCopyResultToInput" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc)
+		return;
+
+	pDoc->CopyResultToInput();
+	Invalidate(FALSE);
+}
 
 void CImageProGyuTaeAhnView::OnPixelAdd()
 {
@@ -1332,27 +1362,82 @@ void CImageProGyuTaeAhnView::OnVideoInvert() {
 	Invalidate(FALSE);
 }
 
-void::CImageProGyuTaeAhnView::OnCameraSharpening() {
+void CImageProGyuTaeAhnView::OnCameraSharpening() {
 	std::cout << "[pView] OnCameraSharpening" << std::endl;
 	operation = SHARPENING;
 }
 
-void::CImageProGyuTaeAhnView::OnCameraBlurring() {
+void CImageProGyuTaeAhnView::OnCameraBlurring() {
 	std::cout << "[pView] OnCameraBlurring" << std::endl;
 	operation = BLURRING;
 }
 
-void::CImageProGyuTaeAhnView::OnCameraSobel() {
+void CImageProGyuTaeAhnView::OnCameraSobel() {
 	std::cout << "[pView] OnCameraSobel" << std::endl;
 	operation = SOBEL;
 }
 
-void::CImageProGyuTaeAhnView::OnCameraSubtract() {
+void CImageProGyuTaeAhnView::OnCameraSubtract() {
 	std::cout << "[pView] OnCameraSubtract" << std::endl;
 	operation = SUBTRACT;
 }
 
-void::CImageProGyuTaeAhnView::OnCameraInvert() {
+void CImageProGyuTaeAhnView::OnCameraInvert() {
 	std::cout << "[pView] OnCameraInvert" << std::endl;
 	operation = INVERT;
+}
+
+void CImageProGyuTaeAhnView::OnFFT2D() {
+	std::cout << "[pView] OnFFT2D" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc) return;
+	pDoc->FFT2D();
+	viewMode = TWO_IMAGES;
+	Invalidate(FALSE);
+}
+
+void CImageProGyuTaeAhnView::OnIFFT2D() {
+	std::cout << "[pView] OnIFFT2D" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc) return;
+	pDoc->IFFT2D();
+	viewMode = TWO_IMAGES;
+	Invalidate(FALSE);
+}
+
+void CImageProGyuTaeAhnView::OnLowPassFilter() {
+	std::cout << "[pView] OnLowPassFilter" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc) return;
+	pDoc->LowPassFilter();
+	viewMode = TWO_IMAGES;
+	Invalidate(FALSE);
+}
+
+void CImageProGyuTaeAhnView::OnHighPassFilter() {
+	std::cout << "[pView] OnHighPassFilter" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc) return;
+	pDoc->HighPassFilter();
+	viewMode = TWO_IMAGES;
+	Invalidate(FALSE);
+}
+
+void CImageProGyuTaeAhnView::OnNoiseReduction() {
+	std::cout << "[pView] OnNoiseReduction" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc) return;
+	pDoc->NoiseReduction();
+	viewMode = TWO_IMAGES;
+	Invalidate(FALSE);
 }
