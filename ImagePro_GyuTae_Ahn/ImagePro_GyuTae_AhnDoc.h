@@ -10,6 +10,22 @@ typedef struct {
 	double im;
 } complex_num;
 
+typedef struct PCX_HEADER {
+	char manufacturer;
+	char version;
+	char encoding;
+	char bit_per_pixel;
+	short int xmin, ymin;
+	short int xmax, ymax;
+	short int hres, vres;
+	char palette16[48];
+	char reserved;
+	char color_planes;
+	short int bytes_per_line;
+	short int palette_type;
+	char filler[58];
+} pcx_header;
+
 
 class CImageProGyuTaeAhnDoc : public CDocument
 {
@@ -139,5 +155,9 @@ public:
 	void LowPassFilter();
 	void HighPassFilter();
 	void NoiseReduction();
+
+	//Image Compression and Restoration
+	void LoadPCX();
+	void SavePCX();
+	void LoadJPEG();
 };
-	

@@ -11,11 +11,11 @@
 #endif
 
 #include "ImagePro_GyuTae_AhnDoc.h"
-
 #include <iostream>
 #include <algorithm>
 #include <propkey.h>
 #include <math.h>
+#include "Jpegfile.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -2327,3 +2327,169 @@ void CImageProGyuTaeAhnDoc::NoiseReduction() {
 	fft_result[0][192].im = 0.0;
 	IFFT2D();
 } // NoiseReduction
+
+void CImageProGyuTaeAhnDoc::LoadPCX() {
+	if (console_output) std::cout << "[pDoc] LoadPCX" << std::endl;
+	int run_length;
+	unsigned char c;
+	pcx_header pcxhead;
+	CString fname;
+	CFile file;
+	CFileDialog dlg(TRUE);
+
+	if (console_output) std::cout << " >[LoadPCX] Open File" << std::endl;
+	if (dlg.DoModal() == IDOK) {
+		fname = dlg.GetPathName();
+		file.Open(fname, CFile::modeRead);
+
+		auto ext = strrchr(fname, '.');
+		if (console_output) std::cout << " >[LoadPCX] File path: "<< fname << std::endl;
+		if (console_output) std::cout << " >[LoadPCX] File extension: " << ext << std::endl;
+
+		if (strcmp(ext, ".PCX") == 0 || strcmp(ext, ".pcx") == 0) {
+			file.Read(&pcxhead, sizeof(pcx_header));
+			imageWidth = (pcxhead.xmax - pcxhead.xmin) + 1;
+			imageHeight = (pcxhead.ymax - pcxhead.ymin) + 1;
+
+			depth = pcxhead.color_planes;
+			if (depth != 1) {
+				if (console_output) std::cout << " >[LoadPCX] Not a monochrome image" << std::endl;
+				AfxMessageBox("Not a monochrome image");
+				return;
+			}
+
+			input_img = (unsigned char**)malloc(imageHeight * sizeof(unsigned char*));
+			output_img = (unsigned char**)malloc(imageHeight * sizeof(unsigned char*));
+
+			for (int i = 0; i < imageHeight; i++) {
+				input_img[i] = (unsigned char*)malloc(imageWidth);
+				output_img[i] = (unsigned char*)malloc(imageWidth);
+			}
+
+			for (int y = 0; y < imageHeight; y++) {
+				for (int x = 0; x < imageWidth;) {
+					file.Read(&c, 1);
+					if ((c & 0xc0) == 0xc0) {
+						run_length = c & 0x3f;
+						file.Read(&c, 1);
+						while (run_length--) input_img[y][x++] = c;
+					}
+					else {
+						input_img[y][x++] = c;
+					}
+				}
+			}
+		}
+		if (console_output) std::cout << " >[LoadPCX] Done" << std::endl;
+	}
+	else {
+		if (console_output) std::cout << " >[LoadPCX] Cancelled" << std::endl;
+	}
+} // LoadPCX
+
+void CImageProGyuTaeAhnDoc::SavePCX() {
+	if (console_output) std::cout << "[pDoc] SavePCX" << std::endl;
+	int run_length;
+	unsigned char c, cur, prev;
+	pcx_header pcxhead;
+	CString fname;
+	CFile file;
+	CFileDialog dlg(TRUE);
+
+	if (console_output) std::cout << " >[SavePCX] Select File Name" << std::endl;
+	if (dlg.DoModal() == IDOK) {
+		fname = dlg.GetPathName();
+		file.Open(fname, CFile::modeCreate | CFile::modeWrite);
+		if (console_output) std::cout << " >[SavePCX] File Name: " << fname << std::endl;
+
+		auto ext = strrchr(fname, '.');
+		if (strcmp(ext, ".PCX") == 0 || strcmp(ext, ".pcx") == 0) {
+			memset(&pcxhead, 0, 128);
+			pcxhead.manufacturer = 10;
+			pcxhead.version = 5;
+			pcxhead.encoding = 1;
+			pcxhead.bit_per_pixel = 8;
+			pcxhead.xmin = 0;
+			pcxhead.ymin = 0;
+			pcxhead.xmax = imageWidth - 1;
+			pcxhead.ymax = imageHeight - 1;
+			pcxhead.hres = 150;
+			pcxhead.vres = 150;
+			pcxhead.color_planes = 1;
+			pcxhead.bytes_per_line = imageWidth;
+			pcxhead.palette_type = 1;
+			file.Write(&pcxhead, 128);
+
+			if (console_output) std::cout << " >[LoadPCX] Save File..." << std::endl;
+			for (int y = 0; y < imageHeight; y++) {
+				run_length = 0;
+				for (int x = 0; x < imageWidth; x++) {
+					cur = input_img[y][x];
+					run_length++;
+					
+					if (x < imageWidth - 1 && cur == input_img[y][x + 1] && run_length < 63) {
+						continue;
+					}
+					else if (run_length > 1 || (0xC0 & cur) == 0xC0) {
+						c = 0xC0 | (unsigned char)run_length;
+						file.Write(&c, 1);
+						file.Write(&cur, 1);
+						run_length = 0;
+					}
+					else {
+						file.Write(&cur, 1);
+						run_length = 0;
+					}
+				}
+			}
+		}
+		file.Close();
+	}
+	else {
+		if (console_output) std::cout << " >[LoadPCX] Cancelled" << std::endl;
+	}
+	if (console_output) std::cout << " >[LoadPCX] Done" << std::endl;
+}
+
+void CImageProGyuTaeAhnDoc::LoadJPEG() {
+	int run_length;
+	unsigned char c;
+	CString fname;
+	BYTE* m_buffer;
+	CFile file;
+	CFileDialog dlg(TRUE);
+
+	if (console_output) std::cout << " >[LoadJPEG] Open File" << std::endl;
+	if (dlg.DoModal() == IDOK) {
+		fname = dlg.GetPathName();
+
+		if (console_output) std::cout << " >[LoadJPEG] File path: " << fname << std::endl;
+		auto ext = strrchr(fname, '.');
+		if (console_output) std::cout << " >[LoadJPEG] File extension: " << ext << std::endl;
+		if (strcmp(ext, ".JPG") == 0 || strcmp(ext, ".jpg") == 0) {
+			UINT width, height;
+
+			m_buffer = JpegFile::JpegFileToRGB(fname, &width, &height);
+
+			imageWidth = width;
+			imageHeight = height;
+			depth = 3;
+
+			input_img = (unsigned char**)malloc(imageHeight * sizeof(unsigned char*));
+			output_img = (unsigned char**)malloc(imageHeight * sizeof(unsigned char*));
+
+			for (int i = 0; i < imageHeight; i++) {
+				input_img[i] = (unsigned char*)malloc(imageWidth * depth);
+				output_img[i] = (unsigned char*)malloc(imageWidth * depth);
+			}
+
+			for (int y = 0; y < imageHeight; y++) {
+				for (int x = 0; x < imageWidth; x++) {
+					input_img[y][x * depth] = m_buffer[(y * imageWidth + x) * depth];
+					input_img[y][x * depth + 1] = m_buffer[(y * imageWidth + x) * depth + 1];
+					input_img[y][x * depth + 2] = m_buffer[(y * imageWidth + x) * depth + 2];
+				}
+			}
+		}
+	}
+} // LoadJPEG

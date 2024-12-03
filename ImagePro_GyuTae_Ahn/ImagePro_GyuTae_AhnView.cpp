@@ -108,6 +108,9 @@ BEGIN_MESSAGE_MAP(CImageProGyuTaeAhnView, CScrollView)
 	ON_COMMAND(ID_LOW_PASS_FILTER, &CImageProGyuTaeAhnView::OnLowPassFilter)
 	ON_COMMAND(ID_HIGH_PASS_FILTER, &CImageProGyuTaeAhnView::OnHighPassFilter)
 	ON_COMMAND(ID_NOISE_REDUCTION, &CImageProGyuTaeAhnView::OnNoiseReduction)
+	ON_COMMAND(ID_LOAD_PCX, &CImageProGyuTaeAhnView::OnLoadPCX)
+	ON_COMMAND(ID_SAVE_PCX, &CImageProGyuTaeAhnView::OnSavePCX)
+	ON_COMMAND(ID_LOAD_JPEG, &CImageProGyuTaeAhnView::OnLoadJPEG)
 END_MESSAGE_MAP()
 
 // CImageProGyuTaeAhnView construction/destruction
@@ -1438,6 +1441,47 @@ void CImageProGyuTaeAhnView::OnNoiseReduction() {
 
 	if (!pDoc) return;
 	pDoc->NoiseReduction();
+	viewMode = TWO_IMAGES;
+	Invalidate(FALSE);
+}
+
+void CImageProGyuTaeAhnView::OnLoadPCX() {
+	std::cout << "[pView] OnLoadPCX" << std::endl;
+
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc) return;
+	pDoc->LoadPCX();
+	viewMode = TWO_IMAGES;
+	Invalidate(FALSE);
+}
+
+void CImageProGyuTaeAhnView::OnSavePCX() {
+	std::cout << "[pView] OnSavePCX" << std::endl;
+
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc) return;
+	if (pDoc->input_img == NULL) {
+		std::cout << "[pView] No Image" << std::endl;
+		AfxMessageBox("No Image to Save");
+		return;
+	}
+	pDoc->SavePCX();
+	viewMode = TWO_IMAGES;
+	Invalidate(FALSE);
+}
+
+void CImageProGyuTaeAhnView::OnLoadJPEG() {
+	std::cout << "[pView] OnLoadJPEG" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc) return;
+
+	pDoc->LoadJPEG();
 	viewMode = TWO_IMAGES;
 	Invalidate(FALSE);
 }

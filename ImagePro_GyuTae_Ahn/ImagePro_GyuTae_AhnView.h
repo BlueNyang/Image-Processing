@@ -120,6 +120,10 @@ public:
 	afx_msg void OnLowPassFilter();
 	afx_msg void OnHighPassFilter();
 	afx_msg void OnNoiseReduction();
+
+	afx_msg void OnLoadPCX();
+	afx_msg void OnSavePCX();
+	afx_msg void OnLoadJPEG();
 };
 
 #ifndef _DEBUG  // debug version in ImagePro_GyuTae_AhnView.cpp

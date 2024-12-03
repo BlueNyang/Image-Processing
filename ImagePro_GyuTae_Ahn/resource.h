@@ -145,13 +145,19 @@
 #define ID_NOISE_REDUCTION              32883
 #define ID_ETC_COPYRESULTTOINPUT        32884
 #define ID_COPY_OUT_TO_IN               32885
+#define ID_VIDEOCOMP_PCXRESTORE         32886
+#define ID_LOAD_PCX                     32887
+#define ID_SAVE_PCX                     32888
+#define ID_LOAD_JPEG                    32889
+#define ID_SAVE_JPEG                    32890
+#define ID_VIDEOCOMP_JPEGRESTORE        32891
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        310
-#define _APS_NEXT_COMMAND_VALUE         32886
+#define _APS_NEXT_COMMAND_VALUE         32892
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
