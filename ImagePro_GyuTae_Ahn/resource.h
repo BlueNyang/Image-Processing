@@ -30,6 +30,8 @@
 #define ID_VIEW_APPLOOK_OFF_2007_AQUA   218
 #define ID_VIEW_APPLOOK_WINDOWS_7       219
 #define IDS_EDIT_MENU                   306
+#define IDD_DIALOG1                     310
+#define IDC_EDIT1                       1000
 #define ID_PIXELPROCESSING_PIXELADD     32771
 #define ID_PIXELADD                     32772
 #define PIXELADD                        32773
@@ -151,14 +153,17 @@
 #define ID_LOAD_JPEG                    32889
 #define ID_SAVE_JPEG                    32890
 #define ID_VIDEOCOMP_JPEGRESTORE        32891
+#define ID_GEOMETRYPROCESSING_ZOOM32892 32892
+#define ID_ZOOM_IN_DIALOG               32893
+#define ID_GEOMETRY_MORPHING_MYIMG      32894
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        310
-#define _APS_NEXT_COMMAND_VALUE         32892
-#define _APS_NEXT_CONTROL_VALUE         1000
+#define _APS_NEXT_RESOURCE_VALUE        312
+#define _APS_NEXT_COMMAND_VALUE         32895
+#define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

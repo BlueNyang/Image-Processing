@@ -13,6 +13,8 @@
 #include "ImagePro_GyuTae_AhnDoc.h"
 #include "ImagePro_GyuTae_AhnView.h"
 
+#include "CInputDlg.h"
+
 #include <iostream>
 #include <vfw.h>
 
@@ -81,6 +83,7 @@ BEGIN_MESSAGE_MAP(CImageProGyuTaeAhnView, CScrollView)
 	ON_COMMAND(ID_CLOSING_0, &CImageProGyuTaeAhnView::OnClosing0)
 	ON_COMMAND(ID_CLOSING_255, &CImageProGyuTaeAhnView::OnClosing255)
 	ON_COMMAND(ID_COUNT_CELL, &CImageProGyuTaeAhnView::OnCountCell)
+	ON_COMMAND(ID_ZOOM_IN_DIALOG, &CImageProGyuTaeAhnView::OnZoomInDialog)
 	ON_COMMAND(ID_GEOMETRY_ZOOMIN_PIXEL_COPY, &CImageProGyuTaeAhnView::OnGeometryZoominPixelCopy)
 	ON_COMMAND(ID_GEOMETRY_ZOOMIN_INTERPOLATION, &CImageProGyuTaeAhnView::OnGeometryZoominInterpolation)
 	ON_COMMAND(ID_GEOMETRY_ZOOMOUT_SUBSAMPLING, &CImageProGyuTaeAhnView::OnGeometryZoomoutSubsampling)
@@ -92,6 +95,7 @@ BEGIN_MESSAGE_MAP(CImageProGyuTaeAhnView, CScrollView)
 	ON_COMMAND(ID_GEOMETRY_MY_WARPING, &CImageProGyuTaeAhnView::OnGeometryMyWarping)
 	ON_COMMAND(ID_GEOMETRY_WARPING_SMILE, &CImageProGyuTaeAhnView::OnGeometryWarpingSmile)
 	ON_COMMAND(ID_GEOMETRY_MORPHING_NORMAL, &CImageProGyuTaeAhnView::OnGeometryMorphing)
+	ON_COMMAND(ID_GEOMETRY_MORPHING_MYIMG, &CImageProGyuTaeAhnView::OnGeometryMorphingMyImg)
 	ON_COMMAND(ID_AVI_VIEW, &CImageProGyuTaeAhnView::OnAviView)
 	ON_COMMAND(ID_CAMERA_VIEW, &CImageProGyuTaeAhnView::OnCameraView)
 	ON_COMMAND(ID_VIDEO_SHARPENING, &CImageProGyuTaeAhnView::OnVideoSharpening)
@@ -298,13 +302,14 @@ void CImageProGyuTaeAhnView::LoadAVIFile(CDC* pDC) {
 						}
 					} // for frame
 				}
-				else if (operation == SHARPENING || operation == BLURRING || operation == SOBEL || operation == INVERT) {
+				else {
 					CImageProGyuTaeAhnDoc* pDoc = GetDocument();
 					ASSERT_VALID(pDoc);
 
 					if (!pDoc)
 						return;
 					int depth = 3;
+
 					pDoc->console_output = false;
 					pDoc->imageWidth = fi.dwWidth;
 					pDoc->imageHeight = fi.dwHeight;
@@ -323,12 +328,12 @@ void CImageProGyuTaeAhnView::LoadAVIFile(CDC* pDC) {
 						for (x = 0; x < fi.dwWidth; x++)
 						{
 							if (depth == 1)
-								pDoc->input_img[y][x] = image[(fi.dwHeight - 1 - y) * fi.dwWidth + x];
+								pDoc->input_img[fi.dwHeight - y - 1][x] = image[y * fi.dwWidth + x];
 							else if (depth == 3)
 							{
-								pDoc->input_img[y][x * depth] = image[((fi.dwHeight - 1 - y) * fi.dwWidth + x) * 3 + 2];
-								pDoc->input_img[y][x * depth + 1] = image[((fi.dwHeight - 1 - y) * fi.dwWidth + x) * 3 + 1];
-								pDoc->input_img[y][x * depth + 2] = image[((fi.dwHeight - 1 - y) * fi.dwWidth + x) * 3];
+								pDoc->input_img[fi.dwHeight - y - 1][x * depth] = image[(y * fi.dwWidth + x) * 3 + 2];
+								pDoc->input_img[fi.dwHeight - y - 1][x * depth + 1] = image[(y * fi.dwWidth + x) * 3 + 1];
+								pDoc->input_img[fi.dwHeight - y - 1][x * depth + 2] = image[(y * fi.dwWidth + x) * 3];
 							}
 						}
 					}
@@ -344,7 +349,7 @@ void CImageProGyuTaeAhnView::LoadAVIFile(CDC* pDC) {
 
 					for (y = 0; y < fi.dwHeight; y++)
 					{
-						for (x = 0; x < fi.dwWidth * depth; x++)
+						for (x = 0; x < fi.dwWidth; x++)
 						{
 							if (depth == 1) pDC->SetPixel(x, y, RGB(pDoc->output_img[y][x], pDoc->output_img[y][x], pDoc->output_img[y][x]));
 							else if (depth == 3) {
@@ -1053,6 +1058,22 @@ void CImageProGyuTaeAhnView::OnOpening255()
 }
 
 //Geometry Pixel Processing
+void CImageProGyuTaeAhnView::OnZoomInDialog() {
+	std::cout << "[pView] OnZoomInDialog" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc)
+		return;
+
+	CInputDlg inputDlg;
+	inputDlg.DoModal();
+
+	pDoc->ZoomInDialog(inputDlg.m_zoom_in_ratio);
+	viewMode = TWO_IMAGES_SCALED;
+	Invalidate(0);
+}
+
 void CImageProGyuTaeAhnView::OnGeometryZoominPixelCopy()
 {
 	std::cout << "[pView] OnGeometryZoominPixelCopy" << std::endl;
@@ -1236,6 +1257,19 @@ void CImageProGyuTaeAhnView::OnGeometryMorphing()
 	Invalidate(FALSE);
 }
 
+void CImageProGyuTaeAhnView::OnGeometryMorphingMyImg() {
+	std::cout << "[pView] OnGeometryMorphingMyImg" << std::endl;
+	CImageProGyuTaeAhnDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	if (!pDoc) return;
+
+	pDoc->console_output = true;
+	pDoc->GeometryMorphingMyImg();
+
+	viewMode = MORPHING;
+	Invalidate(FALSE);
+}
 
 void CImageProGyuTaeAhnView::OnAviView()
 {

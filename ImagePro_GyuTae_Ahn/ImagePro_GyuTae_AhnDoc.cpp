@@ -1396,6 +1396,42 @@ void CImageProGyuTaeAhnDoc::CountCell() {
 	if(console_output) std::cout << " >[CountCell] Done" << std::endl;
 }//CountCell
 
+void CImageProGyuTaeAhnDoc::ZoomInDialog(float zoom_in_ratio) {
+	if (console_output) std::cout << "[pDoc] ZoomInDialog" << std::endl;
+	if (input_img == NULL) Load1Image();
+	if (input_img == NULL) return;
+
+	gImageWidth = (int)(imageWidth * zoom_in_ratio);
+	gImageHeight = (int)(imageHeight * zoom_in_ratio);
+	if (console_output) std::cout << " >[ZoomInDialog] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
+
+	if (console_output) std::cout << " >[ZoomInDialog] malloc gOutput_img" << std::endl;
+	gOutput_img = (unsigned char**)malloc(sizeof(unsigned char*) * gImageHeight);
+
+	for (int i = 0; i < gImageHeight; i++) {
+		gOutput_img[i] = (unsigned char*)malloc(gImageWidth * depth);
+	}
+
+	if (console_output) std::cout << " >[ZoomInDialog] Copying input_img to gOutput_img" << std::endl;
+	if (depth == 1) {
+		for (int y = 0; y < gImageHeight; y++) {
+			for (int x = 0; x < gImageWidth; x++) {
+				gOutput_img[y][x] = input_img[(int)(y / zoom_in_ratio)][(int)(x / zoom_in_ratio)];
+			}
+		}
+	}
+	else if (depth == 3) {
+		for (int y = 0; y < gImageHeight; y++) {
+			for (int x = 0; x < gImageWidth; x++) {
+				gOutput_img[y][3 * x] = input_img[(int)(y / zoom_in_ratio)][3 * (int)(x / zoom_in_ratio)];
+				gOutput_img[y][3 * x + 1] = input_img[(int)(y / zoom_in_ratio)][3 * (int)(x / zoom_in_ratio) + 1];
+				gOutput_img[y][3 * x + 2] = input_img[(int)(y / zoom_in_ratio)][3 * (int)(x / zoom_in_ratio) + 2];
+			}
+		}
+	}
+	if (console_output) std::cout << " >[ZoomInDialog] Done" << std::endl;
+}
+
 void CImageProGyuTaeAhnDoc::GeometryZoominPixelCopy() {
 	if(console_output) std::cout << "[pDoc] GeometryZoominPixelCopy" << std::endl;
 	if (input_img == NULL) Load1Image();
@@ -1611,7 +1647,7 @@ void  CImageProGyuTaeAhnDoc::GeometryRotate() {
 
 	if(console_output) std::cout << " >[GeometryRotate] imageWidth: " << imageWidth << ", imageHeight: " << imageHeight << ", depth: " << depth << std::endl;
 
-	float angle = 150.0;
+	float angle = 30.0;
 	float theta = PI / 180.0 * angle;
 
 	int Cx = imageWidth / 2;
@@ -1846,13 +1882,13 @@ void CImageProGyuTaeAhnDoc::GeometryMyImageWarping() {
 void CImageProGyuTaeAhnDoc::GeometryMyImageWarping_Smile() {
 	control_line source_lines[8] = {
 		{0, 0, 299, 0}, {0, 339, 299, 339}, {0, 0, 0, 339}, {299, 0, 299, 339},
-		{132, 248, 151, 245}, {151, 245, 166, 246}, {166, 246, 185, 245}, {185, 245, 205, 244} };
+		{132, 248, 151, 245}, {151, 245, 169, 245}, {169, 245, 190, 244}, {190, 244, 205, 244} };
 
 	control_line dest_lines[8] = {
 		{0, 0, 299, 0}, {0, 339, 299, 339}, {0, 0, 0, 339}, {299, 0, 299, 339},
-		{127, 238, 151, 245}, {151, 245, 166, 246}, {166, 246, 185, 245}, {185, 245, 207, 219} };
+		{127, 238, 151, 245}, {151, 245, 169, 245}, {169, 245, 193, 243}, {193, 243, 207, 237} };
 
-	GeometryWarping(source_lines, dest_lines, 5);
+	GeometryWarping(source_lines, dest_lines, 8);
 } // GeometryWarping
 
 void CImageProGyuTaeAhnDoc::GeometryMorphing(control_line source_lines[], control_line dest_lines[], int control_line_num) {

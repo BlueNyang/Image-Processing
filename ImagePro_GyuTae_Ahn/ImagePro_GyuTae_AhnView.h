@@ -89,6 +89,7 @@ public:
 	afx_msg void OnClosing255();
 	afx_msg void OnCountCell();
 
+	afx_msg void OnZoomInDialog();
 	afx_msg void OnGeometryZoominPixelCopy();
 	afx_msg void OnGeometryZoominInterpolation();
 	afx_msg void OnGeometryZoomoutSubsampling();
@@ -97,9 +98,10 @@ public:
 	afx_msg void OnGeometryVerticalFlip();
 	afx_msg void OnGeometryHorizontalFlip();
 	afx_msg void OnGeometryWarping();
-	afx_msg void OnGeometryMorphing();
 	afx_msg void OnGeometryMyWarping();
 	afx_msg void OnGeometryWarpingSmile();
+	afx_msg void OnGeometryMorphing();
+	afx_msg void OnGeometryMorphingMyImg();
 
 	afx_msg void OnAviView();
 	afx_msg void OnCameraView();

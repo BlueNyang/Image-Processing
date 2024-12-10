@@ -192,6 +192,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ChildFrm.h" />
+    <ClInclude Include="CInputDlg.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="ImagePro_GyuTae_Ahn.h" />
     <ClInclude Include="ImagePro_GyuTae_AhnDoc.h" />
@@ -207,6 +208,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ChildFrm.cpp" />
+    <ClCompile Include="CInputDlg.cpp" />
     <ClCompile Include="ImagePro_GyuTae_Ahn.cpp" />
     <ClCompile Include="ImagePro_GyuTae_AhnDoc.cpp" />
     <ClCompile Include="ImagePro_GyuTae_AhnView.cpp" />

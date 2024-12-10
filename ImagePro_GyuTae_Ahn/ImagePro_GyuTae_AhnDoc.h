@@ -130,6 +130,7 @@ public:
 	void CountCell();
 	
 	//Image Geometric Processing
+	void ZoomInDialog(float zoom_in_ratio);
 	void GeometryZoominPixelCopy();
 	void GeometryZoominInterpolation();
 	void GeometryZoomoutSubsampling();
